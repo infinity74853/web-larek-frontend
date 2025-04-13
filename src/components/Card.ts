@@ -1,13 +1,15 @@
-import {Component} from "./base/Component";
-import {bem, createElement, ensureElement, formatNumber} from "../utils/utils";
+import { Product } from '../types';
 
-interface ICardActions {
-    onClick: (event: MouseEvent) => void;
-}
-
-export interface ICard<T> {
-    title: string;
-    description?: string | string[];
-    image: string;
-    status: T;
+export class Card {
+  constructor(private product: Product) {}
+  
+  render(): HTMLElement {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h3>${this.product.title}</h3>
+      <p>Цена: ${this.product.price} ₽</p>
+    `;
+    return card;
+  }
 }
