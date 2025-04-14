@@ -1,41 +1,42 @@
-import { EventEmitter } from "../base/events";
+import { EventEmitter } from '../base/events';
+import { ensureElement } from '../../utils/utils';
 
 export class Modal {
-  protected modalElement: HTMLElement;
-  protected closeButton: HTMLButtonElement;
-  protected overlay: HTMLElement;
+    protected _modal: HTMLElement;
+    protected _closeButton: HTMLButtonElement;
+    protected _content: HTMLElement;
 
-  constructor(modalId: string, protected events: EventEmitter) {
-    //находим элементы
-    this.modalElement = document.getElementById(modalId);
-    this.closeButton = this.modalElement.querySelector('.modal__close') as HTMLButtonElement;
-    this.overlay = this.modalElement.querySelector('.modal__overlay') as HTMLElement;
+    constructor(modalId: string, protected events: EventEmitter) {
+        this._modal = ensureElement<HTMLElement>(`#${modalId}`);
+        this._closeButton = ensureElement<HTMLButtonElement>('.modal__close', this._modal);
+        this._content = ensureElement<HTMLElement>('.modal__content', this._modal);
 
-    //вешаем обработчики
-    this.closeButton.addEventListener('click', () => this.close());
-    this.overlay.addEventListener('click', () => this.close());
-  }
+        this._closeButton.addEventListener('click', this.close.bind(this));
+        this._modal.addEventListener('click', this.handleOverlayClick.bind(this));
+        document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    }
 
-  open() {
-    this.modalElement.classList.add('modal_active');
-    document.addEventListener('keydown', this.handleKeyDown);
-    document.body.style.overflow = 'hidden';
-  }
+    private handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') this.close();
+    };
 
-  close() {
-    this.modalElement.classList.remove('modal_active');
-    document.removeEventListener('keydown', this.handleKeyDown);
-    document.body.style.overflow = '';
-    this.events.emit('modal:close');
-  }
+    private handleOverlayClick = (e: MouseEvent) => {
+        if (e.target === this._modal) this.close();
+    };
 
-  private handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') this.close();
-  };
+    open(): void {
+        this._modal.classList.add('modal_active');
+        document.body.style.overflow = 'hidden';
+    }
 
-  setContent(content: HTMLElement) {
-    const container = this.modalElement.querySelector('.modal__content');
-    container.innerHTML = '';
-    container.append(content);
-  }
+    close(): void {
+        this._modal.classList.remove('modal_active');
+        document.body.style.overflow = '';
+        this.events.emit('modal:close');
+    }
+
+    setContent(content: HTMLElement): void {
+        this._content.innerHTML = '';
+        this._content.append(content);
+    }
 }
