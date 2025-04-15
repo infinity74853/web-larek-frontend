@@ -1,15 +1,40 @@
-import { API_URL } from '../utils/constants';
+import { API_URL, CDN_URL } from '../utils/constants';
 import { Product } from '../types';
 
 export class ApiClient {
-    private readonly baseUrl: string;
+    private readonly apiUrl: string;
+    private readonly cdnUrl: string;
 
-    constructor(baseUrl: string = API_URL) {
-        this.baseUrl = baseUrl;
+    constructor(apiUrl: string = API_URL, cdnUrl: string = CDN_URL) {
+        this.apiUrl = apiUrl;
+        this.cdnUrl = cdnUrl;
+    }
+
+    private processImageUrl(imageUrl: string | undefined): string {
+        if (!imageUrl) {
+            // Возвращаем URL для placeholder изображения из CDN
+            return `${this.cdnUrl}/images/placeholder.svg`;
+        }
+
+        // Обрабатываем разные варианты некорректных путей
+        let processedUrl = imageUrl;
+        
+        // Удаляем звездочку в начале пути, если есть
+        if (processedUrl.startsWith('*/')) {
+            processedUrl = processedUrl.substring(1);
+        }
+        
+        // Добавляем слеш в начале, если отсутствует
+        if (!processedUrl.startsWith('/')) {
+            processedUrl = `/${processedUrl}`;
+        }
+        
+        // Используем CDN URL для изображений
+        return `${this.cdnUrl}${processedUrl}`;
     }
 
     async getProducts(): Promise<Product[]> {
-        const response = await fetch(`${this.baseUrl}/product`);
+        const response = await fetch(`${this.apiUrl}/products`);
         
         if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
@@ -21,7 +46,11 @@ export class ApiClient {
             throw new Error('Invalid products data format');
         }
 
-        return data.items;
+        // Обрабатываем изображения для каждого продукта
+        return data.items.map(item => ({
+            ...item,
+            image: this.processImageUrl(item.image)
+        }));
     }
 }
 
