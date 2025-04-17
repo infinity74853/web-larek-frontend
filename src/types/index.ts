@@ -2,7 +2,7 @@
     id: string;
     title: string;
     price: number | null;
-    description: string;
-    image: string;
-    category: string;  
+    description?: string;
+    image?: string;
+    category?: string; 
 }

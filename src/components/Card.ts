@@ -1,109 +1,101 @@
-import { Product } from '../types';
-import { CDN_URL, settings } from '../utils/constants';
+import { Product } from "../types";
+import { CDN_URL } from "../utils/constants";
 
+interface CardOptions {
+    onClick?: (product: Product) => void;
+}
 export class Card {
-    private readonly product: Product;
-    constructor(product: Product) {
-        if (!product.id) {
-            console.error('Product ID is required');
-            throw new Error('Invalid product data: ID is required');
-        }
+    private product: Product;
+    private options: CardOptions;
+
+    constructor(product: Product, options: CardOptions = {}) {
+        if (!product.id) throw new Error("Product ID is required");
         this.product = product;
+        this.options = options;
     }
-    
+
     render(): HTMLElement {
-        try {
-            const card = document.createElement('div');
-            card.className = 'card';
-
-            const content = document.createElement('div');
-            content.className = 'card__content';
-
-            //заголовок
-            const title = document.createElement('h3');
-            title.className = 'card__title';
-            title.textContent = this.product.title || 'Без названия';
-            content.appendChild(title);
-
-            //цена
-            content.appendChild(this.createPriceElement());
-
-            //картинка
-            if (this.product.image) {
-                content.appendChild(this.createImageElement());
-            } else {
-                content.appendChild(this.createPlaceholderElement());
-            }
-
-            //кнопка
-            const button = document.createElement('button');
-            button.className = 'card_button';
-            button.textContent = 'В корзину';
-            content.appendChild(button);
-
-            card.appendChild(content);
-            return card;
-        } catch (error) {
-            console.error('Error rendering card:', error);
-            return this.createErrorCard();
-        }
-    }        
+        const card = document.createElement('div');
+        card.className = 'card';
         
-    private createPriceElement(): HTMLElement {
-        const priceElement = document.createElement('p');
-        priceElement.className = 'card__price';
+        card.innerHTML = `
+            <div class="card__content">
+                <h3 class="card__title">${this.escapeHtml(this.product.title) || 'Без названия'}</h3>
+                <p class="card__price">${this.formatPrice()}</p>
+                <div class="card__image-container"></div>
+                <button class="card__button">В корзину</button>
+            </div>
+        `;
 
-        if (this.product.price === null || this.product.price === undefined) {
-            priceElement.textContent = 'Нет в наличии';
-            priceElement.classList.add('card__price-missing');
-        } else {
-            priceElement.textContent = `${this.product.price.toLocaleString('ru-RU')} ₽`;
-        }
-        return priceElement;
+        this.setupImage(card);
+        
+        //обработчики событий
+        this.setupEventListeners(card);
+
+        return card;
     }
 
-    private createImageElement(): HTMLElement {
-        const container = document.createElement('div');
-        container.className = 'card__image-container';
+    private setupImage(container: HTMLElement) {
+        const imgContainer = container.querySelector('.card__image-container');
+        if (!imgContainer) return;
 
         const img = document.createElement('img');
         img.className = 'card__image';
-        img.src = this.product.image;
-        img.alt = this.product.title || 'Изображение товара';
         img.loading = 'lazy';
+        img.alt = this.product.title || 'Изображение товара';
+        img.src = this.getImageUrl();
+
         img.onerror = () => {
-            img.src = `${CDN_URL}${settings.defaultImage}`;
+            img.src = `${CDN_URL}/images/placeholder.svg`;
             img.alt = 'Изображение недоступно';
-            img.classList.add('card__image-error');
         };
 
-        container.appendChild(img);
-        return container;
+        imgContainer.appendChild(img);
     }
 
-    private createPlaceholderElement(): HTMLElement {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'card__image-placeholder';
-        placeholder.textContent = 'Изображение отсутствует';
-        return placeholder;
+    private setupEventListeners(card: HTMLElement) {
+        const button = card.querySelector('.card__button');
+        if (button) {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.options.onClick?.(this.product);
+            });
+        }
+
+        card.addEventListener('click', () => {
+            //логика при клике на карточку
+        });
     }
 
-    private createErrorCard(): HTMLElement {
-        const card = document.createElement('div');
-        card.className = 'card card_error';
+    private getImageUrl(): string {
+        if (!this.product.image) {
+            return `${CDN_URL}/images/placeholder.svg`;
+        }
 
-        const errorContent = document.createElement('div');
-        errorContent.className = 'card__error-content';
+        if (this.product.image.startsWith('http')) {
+            return this.product.image;
+        }
 
-        const errorText = document.createElement('p');
-        errorText.textContent = 'Ошибка загрузки товара';
+        return `${CDN_URL}/${this.product.image.replace(/^\*\//, '')}`;
+    }
 
-        const errorId = document.createElement('small');
-        errorId.textContent = `ID: ${this.product.id || 'неизвестен'}`;
+    private formatPrice(): string {
+        if (this.product.price === null || this.product.price === undefined) {
+            return 'Нет в наличии';
+        }
+        return `${this.product.price.toLocaleString('ru-RU')} синапсов`;
+    }
 
-        errorContent.appendChild(errorText);
-        errorContent.appendChild(errorId);
-        card.appendChild(errorContent);
-        return card;
+    private escapeHtml(unsafe: string): string {
+        return unsafe.replace(/[&<"'>]/g, (match) => {
+            switch (match) {
+                case '&': return '&amp;';
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '"': return '&quot;';
+                case "'": return '&#039;';
+                default: return match;
+            }
+        });
     }
 }

@@ -15,3 +15,13 @@ html, body.page {
 		position: fixed;
 	}
 }
+
+.error-message {
+    padding: 20px;
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+    border-radius: 4px;
+    margin: 20px;
+    text-align: center;
+}
