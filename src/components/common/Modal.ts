@@ -1,42 +1,44 @@
-import { EventEmitter } from '../base/events';
-import { ensureElement } from '../../utils/utils';
+import {Component} from "../base/Component";
+import {ensureElement} from "../../utils/utils";
+import {IEvents} from "../base/events";
 
-export class Modal {
-    protected _modal: HTMLElement;
+interface IModalData {
+    content: HTMLElement;
+}
+
+export class Modal extends Component<IModalData> {
     protected _closeButton: HTMLButtonElement;
     protected _content: HTMLElement;
 
-    constructor(modalId: string, protected events: EventEmitter) {
-        this._modal = ensureElement<HTMLElement>(`#${modalId}`);
-        this._closeButton = ensureElement<HTMLButtonElement>('.modal__close', this._modal);
-        this._content = ensureElement<HTMLElement>('.modal__content', this._modal);
+    constructor(container: HTMLElement, protected events: IEvents) {
+        super(container);
+
+        this._closeButton = ensureElement<HTMLButtonElement>('.modal__close', container);
+        this._content = ensureElement<HTMLElement>('.modal__content', container);
 
         this._closeButton.addEventListener('click', this.close.bind(this));
-        this._modal.addEventListener('click', this.handleOverlayClick.bind(this));
-        document.addEventListener('keydown', this.handleKeyDown.bind(this));
+        this.container.addEventListener('click', this.close.bind(this));
+        this._content.addEventListener('click', (event) => event.stopPropagation());
     }
 
-    private handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') this.close();
-    };
-
-    private handleOverlayClick = (e: MouseEvent) => {
-        if (e.target === this._modal) this.close();
-    };
-
-    open(): void {
-        this._modal.classList.add('modal_active');
-        document.body.style.overflow = 'hidden';
+    set content(value: HTMLElement) {
+        this._content.replaceChildren(value);
     }
 
-    close(): void {
-        this._modal.classList.remove('modal_active');
-        document.body.style.overflow = '';
+    open() {
+        this.container.classList.add('modal_active');
+        this.events.emit('modal:open');
+    }
+
+    close() {
+        this.container.classList.remove('modal_active');
+        this.content = null;
         this.events.emit('modal:close');
     }
 
-    setContent(content: HTMLElement): void {
-        this._content.innerHTML = '';
-        this._content.append(content);
+    render(data: IModalData): HTMLElement {
+        super.render(data);
+        this.open();
+        return this.container;
     }
 }

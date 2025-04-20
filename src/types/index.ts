@@ -6,3 +6,6 @@
     image?: string;
     category?: string; 
 }
+
+export const categories = ['софт-скил', 'хард-скил', 'другое', 'дополнительное', 'кнопка'] as const;
+export type Category = typeof categories[number];

@@ -1,38 +1,52 @@
-import { Product } from "../types";
+import { Product, Category } from "../types";
 import { CDN_URL } from "../utils/constants";
 
 interface CardOptions {
-    onClick?: (product: Product) => void;
+    onClick: (product: Product) => void;
 }
-export class Card {
-    private product: Product;
-    private options: CardOptions;
 
-    constructor(product: Product, options: CardOptions = {}) {
-        if (!product.id) throw new Error("Product ID is required");
-        this.product = product;
-        this.options = options;
-    }
+export class Card {
+    private static categoryStyles: Record<Category, { class: string }> = {
+        'софт-скил': { class: 'card__category_soft' },
+        'хард-скил': { class: 'card__category_hard' },
+        'другое': { class: 'card__category_other' },
+        'дополнительное': { class: 'card__category_additional' },
+        'кнопка': { class: 'card__category_button' }
+    };
+
+    constructor(
+        private product: Product,
+        private options: CardOptions
+    ) {}
 
     render(): HTMLElement {
         const card = document.createElement('div');
         card.className = 'card';
-        
         card.innerHTML = `
             <div class="card__content">
-                <h3 class="card__title">${this.escapeHtml(this.product.title) || 'Без названия'}</h3>
-                <p class="card__price">${this.formatPrice()}</p>
+                ${this.renderCategory()}
+                <h3 class="card__title">${this.product.title}</h3>
                 <div class="card__image-container"></div>
-                <button class="card__button">В корзину</button>
+                <p class="card__price">${this.formatPrice()}</p>
             </div>
         `;
 
         this.setupImage(card);
+        this.setupClickHandler(card);
         
-        //обработчики событий
-        this.setupEventListeners(card);
-
         return card;
+    }
+
+    private renderCategory(): string {
+        const style = this.product.category in Card.categoryStyles 
+            ? Card.categoryStyles[this.product.category as Category] 
+            : { class: '' };
+            
+        return `
+            <span class="card__category ${style.class}">
+                ${this.product.category}
+            </span>
+        `;
     }
 
     private setupImage(container: HTMLElement) {
@@ -47,23 +61,16 @@ export class Card {
 
         img.onerror = () => {
             img.src = `${CDN_URL}/images/placeholder.svg`;
-            img.alt = 'Изображение недоступно';
+            img.classList.add('card__image-error');
         };
 
         imgContainer.appendChild(img);
     }
 
-    private setupEventListeners(card: HTMLElement) {
-        const button = card.querySelector('.card__button');
-        if (button) {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.options.onClick?.(this.product);
-            });
-        }
-
+    private setupClickHandler(card: HTMLElement) {
+        card.style.cursor = 'pointer';
         card.addEventListener('click', () => {
-            //логика при клике на карточку
+            this.options.onClick(this.product);
         });
     }
 
@@ -71,31 +78,14 @@ export class Card {
         if (!this.product.image) {
             return `${CDN_URL}/images/placeholder.svg`;
         }
-
-        if (this.product.image.startsWith('http')) {
-            return this.product.image;
-        }
-
-        return `${CDN_URL}/${this.product.image.replace(/^\*\//, '')}`;
+        return this.product.image.startsWith('http')
+            ? this.product.image
+            : `${CDN_URL}/${this.product.image.replace(/^\*\//, '')}`;
     }
 
     private formatPrice(): string {
-        if (this.product.price === null || this.product.price === undefined) {
-            return 'Нет в наличии';
-        }
-        return `${this.product.price.toLocaleString('ru-RU')} синапсов`;
-    }
-
-    private escapeHtml(unsafe: string): string {
-        return unsafe.replace(/[&<"'>]/g, (match) => {
-            switch (match) {
-                case '&': return '&amp;';
-                case '<': return '&lt;';
-                case '>': return '&gt;';
-                case '"': return '&quot;';
-                case "'": return '&#039;';
-                default: return match;
-            }
-        });
+        return this.product.price !== null
+            ? `${this.product.price.toLocaleString('ru-RU')} синапсов`
+            : 'Бесценно';
     }
 }

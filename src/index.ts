@@ -7,6 +7,7 @@ import { Product } from "./types";
 
 const events = new EventEmitter();
 
+const modal = new Modal(document.getElementById('modal-container'), events);
 const appContainer = document.getElementById('app-container') || createAppContainer();
 
 function createAppContainer(): HTMLElement {
