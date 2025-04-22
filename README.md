@@ -92,30 +92,26 @@ yarn build
 Единая ответственность: Четкое разделение на Model-View-Presenter;
 Масштабируемость: Легко добавлять новые функции без изменения ядра;
 
-## Основные компоненты
+## Базовые классы
 
-### Базовые классы
+### Класс EventEmitter
 
-Класс	          Назначение
+Брокер событий, централизованная система событий (реализует паттерн "Наблюдатель").
 
-EventEmitter	  Централизованная система событий (паттерн "Наблюдатель")
-Component	      Базовый класс для всех UI-компонентов с методами работы с DOM
-ApiClient	      Обертка для работы с REST API (GET/POST/PUT/DELETE)
+поля:
 
-Пример EventEmitter:
+_events - хранит подписки на события;
 
-class EventEmitter {
-  private events: Map<string, Function[]> = new Map();
+constructor() - запускает брокер событий;
 
-  on(event: string, callback: Function): void {
-    if (!this.events.has(event)) this.events.set(event, []);
-    this.events.get(event)!.push(callback);
-  }
+методы:
 
-  emit(event: string, data?: any): void {
-    this.events.get(event)?.forEach(cb => cb(data));
-  }
-}
+on - подписка на событие;
+off - отписывает от события;
+emit - инициирует событие;
+onAll - подписывает на все события;
+offAll - сбрасывает все подписки;
+trigger - возвращает функцию, которая при вызове инициирует событие;
 
 ### Модели данных
 
