@@ -1,34 +1,20 @@
 import { Api, ApiListResponse } from './base/api';
-import { Product } from '../types';
+import { Product, IOrderData } from '../types';
 
 export class LarekAPI extends Api {
-    private readonly cdnUrl: string;
-
-    constructor(baseUrl: string, cdnUrl: string, options: RequestInit = {}) {
-        super(baseUrl, options);
-        this.cdnUrl = cdnUrl;
+    constructor(baseUrl: string, protected cdnUrl: string) {
+        super(baseUrl);
     }
 
     async getProducts(): Promise<Product[]> {
-        const data = await this.get('/product') as ApiListResponse<any>;
-        return this.processProducts(data.items);
-    }
-
-    private processProducts(items: any[]): Product[] {
-        return items.map(item => ({
-            id: item.id || '',
-            title: item.title || 'Без названия',
-            price: item.price ?? null,
-            description: item.description || '',
-            image: this.processImageUrl(item.image),
-            category: item.category || ''
+        const response = await this.get('/product') as ApiListResponse<Product>;
+        return response.items.map(item => ({
+            ...item,
+            image: item.image ? this.cdnUrl + item.image : undefined
         }));
     }
 
-    private processImageUrl(imageUrl?: string): string {
-        if (!imageUrl) return `${this.cdnUrl}/images/placeholder.svg`;
-        if (imageUrl.startsWith('http')) return imageUrl;
-        if (imageUrl.startsWith('*/')) return `${this.cdnUrl}/${imageUrl.substring(1)}`;
-        return `${this.cdnUrl}/${imageUrl}`;
+    async createOrder(order: IOrderData): Promise<{ id: string }> {
+        return this.post('/order', order) as Promise<{ id: string }>;
     }
 }

@@ -1,91 +1,77 @@
-import { Product, Category } from "../types";
-import { CDN_URL } from "../utils/constants";
+import { Component } from "./base/Component";
+import { ensureElement } from "../utils/utils";
+import { ICard, Category } from "../types";
 
-interface CardOptions {
-    onClick: (product: Product) => void;
+interface ICardActions {
+    onClick?: (event: MouseEvent) => void;
+    onPreview?: () => void;
 }
 
-export class Card {
-    private static categoryStyles: Record<Category, { class: string }> = {
-        'софт-скил': { class: 'card__category_soft' },
-        'хард-скил': { class: 'card__category_hard' },
-        'другое': { class: 'card__category_other' },
-        'дополнительное': { class: 'card__category_additional' },
-        'кнопка': { class: 'card__category_button' }
-    };
+export class Card extends Component<ICard> {
+    protected _title: HTMLElement;
+    protected _image?: HTMLImageElement;
+    protected _price: HTMLElement;
+    protected _category?: HTMLElement;
+    protected _button?: HTMLButtonElement;
+    protected _index?: HTMLElement;
 
-    constructor(
-        private product: Product,
-        private options: CardOptions
-    ) {}
+    constructor(container: HTMLElement, actions?: ICardActions) {
+        super(container);
 
-    render(): HTMLElement {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="card__content">
-                ${this.renderCategory()}
-                <h3 class="card__title">${this.product.title}</h3>
-                <div class="card__image-container"></div>
-                <p class="card__price">${this.formatPrice()}</p>
-            </div>
-        `;
+        this._title = ensureElement<HTMLElement>('.card__title', container);
+        this._price = ensureElement<HTMLElement>('.card__price', container);
+        this._image = container.querySelector('.card__image');
+        this._category = container.querySelector('.card__category');
+        this._button = container.querySelector('.card__button');
+        this._index = container.querySelector('.basket__item-index');
 
-        this.setupImage(card);
-        this.setupClickHandler(card);
-        
-        return card;
-    }
-
-    private renderCategory(): string {
-        const style = this.product.category in Card.categoryStyles 
-            ? Card.categoryStyles[this.product.category as Category] 
-            : { class: '' };
-            
-        return `
-            <span class="card__category ${style.class}">
-                ${this.product.category}
-            </span>
-        `;
-    }
-
-    private setupImage(container: HTMLElement) {
-        const imgContainer = container.querySelector('.card__image-container');
-        if (!imgContainer) return;
-
-        const img = document.createElement('img');
-        img.className = 'card__image';
-        img.loading = 'lazy';
-        img.alt = this.product.title || 'Изображение товара';
-        img.src = this.getImageUrl();
-
-        img.onerror = () => {
-            img.src = `${CDN_URL}/images/placeholder.svg`;
-            img.classList.add('card__image-error');
-        };
-
-        imgContainer.appendChild(img);
-    }
-
-    private setupClickHandler(card: HTMLElement) {
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', () => {
-            this.options.onClick(this.product);
-        });
-    }
-
-    private getImageUrl(): string {
-        if (!this.product.image) {
-            return `${CDN_URL}/images/placeholder.svg`;
+        if (actions?.onPreview) {
+            const previewButton = container.querySelector('.card__image') || 
+                                 container.querySelector('.card__title');
+            previewButton?.addEventListener('click', (e) => {
+                e.preventDefault();
+                actions.onPreview!();
+            });
         }
-        return this.product.image.startsWith('http')
-            ? this.product.image
-            : `${CDN_URL}/${this.product.image.replace(/^\*\//, '')}`;
     }
 
-    private formatPrice(): string {
-        return this.product.price !== null
-            ? `${this.product.price.toLocaleString('ru-RU')} синапсов`
-            : 'Бесценно';
+    set id(value: string) {
+        this.container.dataset.id = value;
+    }
+
+    set title(value: string) {
+        this.setText(this._title, value);
+    }
+
+    set price(value: number | null) {
+        this.setText(this._price, value ? `${value} синапсов` : 'Бесценно');
+    }
+
+    set category(value: Category | undefined) {
+        if (this._category) {
+            this.setText(this._category, value || '');
+            if (value) {
+                const categoryClass = `card__category_${value.replace(' ', '-')}`;
+                this._category.className = `card__category ${categoryClass}`;
+            }
+        }
+    }
+
+    set image(value: string | undefined) {
+        if (this._image) {
+            this._image.src = value || '';
+            this._image.alt = this._title.textContent || '';
+        }
+    }
+
+    set index(value: number | undefined) {
+        if (this._index) {
+            this.setText(this._index, value?.toString() || '');
+        }
+    }
+
+    // Добавляем публичный геттер для container
+    get containerElement(): HTMLElement {
+        return this.container;
     }
 }
