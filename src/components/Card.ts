@@ -24,6 +24,13 @@ export class Card extends Component<ICard> {
         this._category = container.querySelector('.card__category');
         this._button = container.querySelector('.card__button');
         this._index = container.querySelector('.basket__item-index');
+        
+        if (actions?.onClick && this._button) {
+            this._button.addEventListener('click', (e) => {
+                e.preventDefault();
+                actions.onClick!(e);
+            });
+        }
 
         if (actions?.onPreview) {
             const previewButton = container.querySelector('.card__image') || 
