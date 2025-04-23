@@ -1,6 +1,6 @@
 import { Component } from "./base/Component";
 import { ensureElement } from "../utils/utils";
-import { ICard, Category } from "../types";
+import { ICard, Category, categoryClasses } from "../types";
 
 interface ICardActions {
     onClick?: (event: MouseEvent) => void;
@@ -58,8 +58,8 @@ export class Card extends Component<ICard> {
         if (this._category) {
             this.setText(this._category, value || '');
             if (value) {
-                const categoryClass = `card__category_${value.replace(' ', '-')}`;
-                this._category.className = `card__category ${categoryClass}`;
+                this._category.className = 'card__category';
+                this._category.classList.add(`card__category_${categoryClasses[value]}`);
             }
         }
     }

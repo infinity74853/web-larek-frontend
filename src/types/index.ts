@@ -33,5 +33,13 @@ export interface ICard {
     index?: number;
 }
 
-export const categories = ['софт-скил', 'хард-скил', 'другое', 'дополнительное', 'кнопка'] as const;
+export const categories = ['софт-скил', 'хард-скил', 'дополнительное', 'кнопка', 'другое'] as const;
 export type Category = typeof categories[number];
+
+export const categoryClasses: Record<Category, string> = {
+    'софт-скил': 'soft',
+    'хард-скил': 'hard',
+    'дополнительное': 'additional',
+    'кнопка': 'button',
+    'другое': 'other'
+};

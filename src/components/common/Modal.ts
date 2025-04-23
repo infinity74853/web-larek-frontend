@@ -46,13 +46,13 @@ export class Modal extends Component<IModalData> {
     }
 
     open() {
-        // Блокируем скролл страницы
-        document.body.style.overflow = 'hidden';
+        // Добавляем класс, который предотвращает дёргание страницы
+        document.body.classList.add('modal-open');
         
         // Показываем модальное окно
         this.container.classList.add('modal_active');
         
-        // Прокручиваем к модальному окну
+        // Прокручиваем к модальному окну (опционально)
         this.container.scrollIntoView({
             behavior: 'smooth',
             block: 'center'
@@ -70,8 +70,8 @@ export class Modal extends Component<IModalData> {
     }
 
     close() {
-        // Восстанавливаем скролл страницы
-        document.body.style.overflow = '';
+        // Убираем класс, возвращаем скролл
+        document.body.classList.remove('modal-open');
         
         // Скрываем модальное окно
         this.container.classList.remove('modal_active');

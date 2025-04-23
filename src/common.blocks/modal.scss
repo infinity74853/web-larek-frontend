@@ -5,16 +5,20 @@
   @include mixins.sublayer;
   // height: max-content;
   position: fixed;
-  display: none;
+  visibility: hidden;
+  opacity: 0;
   justify-content: center;
   background-color: $overlayBackground;
   z-index: 100;
   padding-top: 5vh;
   padding-bottom: 5vh;
   box-sizing: border-box;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 
   &_active {
-    display: flex;
+    visibility: visible;
+    opacity: 1;
+    overflow-y: auto;
   }
 
   &__container {
@@ -44,6 +48,11 @@
     gap: 2rem;
   }
 
+  &__open {
+    padding-right: calc(100vw - 100%);
+    overflow-y: scroll;
+  }
+
   &__close {
     position: absolute;
     top: calc(#{$defaultPadding} / 2);
@@ -69,3 +78,4 @@
     }
   }
 }
+

@@ -21,6 +21,10 @@ export class Order extends Component<IOrderForm> {
     set valid(value: boolean) {
         this.setDisabled(this._button, !value);
     }
+    
+    set address(value: string) {
+        (this.container.querySelector('[name="address"]') as HTMLInputElement).value = value;
+    }
 
     set errors(value: string) {
         this.setText(this._errors, value);
