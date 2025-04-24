@@ -1,7 +1,6 @@
 import { Component } from "../base/Component";
 import { createElement, formatNumber } from "../../utils/utils";
 import { EventEmitter } from "../base/events";
-import { ICard } from "../../types";
 
 interface IBasketView {
     items: HTMLElement[];

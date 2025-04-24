@@ -75,10 +75,25 @@ yarn build
 - обработка ошибок API;
 
 
+### В коде используются cart (состояние) и basket (UI)
+
+- Basket
+Это UI-компонент, который отвечает за отображение корзины на экране:
+Визуализация списка товаров в корзине;
+Отображение общей суммы;
+Обработка кликов (например, открытие формы заказа);
+
+- Cart
+Это часть состояния приложения, которая хранит данные о выбранных товарах:
+Хранение списка товаров (items);
+Подсчёт общей суммы (total);
+Логика добавления/удаления товаров;
+
+
 ### Техническая реализация
 
-- событийно-ориентированная архитектура;
-- адаптивный UI;
+- MVP для разделения ответственности
+- EventEmitter для связывания компонентов
 
 
 ## Архитектура проекта
@@ -101,39 +116,47 @@ yarn build
 ## Базовые классы
 
 ### Класс Api (src/components/base/api.ts)
-
 Реализует при работе с API: отправку запросов, получение ответов, приведение полученных данных в массив, формирование ссылок через CDN, защиту от битых ссылок;
 
 поля:
-
 - private readonly baseUrl - базовый адрес сервера;
 - private readonly cdnUrl - ссылка на коллекцию товаров;
 
 конструктор:
-
 - constructor(baseUrl: string = API_URL, cdnUrl: string = CDN_URL) - инициализирует клиент API устанавливая ссылки на сервер и коллекцию товара;
 
 методы:
-
 - async getProducts(): Promise<Product[]> - запрашивает список товаров и возвращает обработанные данные;
 - private processProducts(items: any[]): Product[] - Преобразует сырые данные API в массив объектов;
 - private processImageUrl(imageUrl?: string): string - Обрабатывает URL изображения, добавляя при необходимости cdnUrl;
 
 
-### Класс EventEmitter (src/components/base/events.ts)
+### Класс Component (src/components/base/Component.ts)
+Базовый класс для всех UI-компонентов, реализующий общую логику работы с DOM.
 
+поля:
+- protected container(): HTMLElement - контейнер компонента;
+- protected events: Record<string, (e: Event) => void> - хранилище обработчиков событий;
+
+конструктор:
+- constructor(tagName: string = 'div', className: string = '') - создает DOM-элемент;
+
+методы:
+- render(): HTMLElement - возвращает сконструированный DOM-элемент;
+- protected setEvent(event: string, callback: (e: Event) => void): void - устанавливает обработчик события;
+- protected removeEvent(event: string): void - удаляет обработчик события;
+
+
+### Класс EventEmitter (src/components/base/events.ts)
 Брокер событий, централизованная система событий (реализует паттерн "Наблюдатель").
 
 поля:
-
 - _events - хранит подписки на события;
 
 конструктор:
-
 - constructor() - инициализирует карту _events;
 
 методы:
-
 - on - подписка на событие;
 - off - отписывает от события;
 - emit - инициирует событие;
@@ -142,177 +165,117 @@ yarn build
 - trigger - возвращает функцию, которая при вызове инициирует событие;
 
 
-### Класс Component (src/components/base/Component.ts)
-
-Базовый класс для всех UI-компонентов, реализующий общую логику работы с DOM.
-
-поля:
-
-- protected container(): HTMLElement - контейнер компонента;
-- protected events: Record<string, (e: Event) => void> - хранилище обработчиков событий;
-
-конструктор:
-
-- constructor(tagName: string = 'div', className: string = '') - создает DOM-элемент;
-
-методы:
-
-- render(): HTMLElement - возвращает сконструированный DOM-элемент;
-- protected setEvent(event: string, callback: (e: Event) => void): void - устанавливает обработчик события;
-- protected removeEvent(event: string): void - удаляет обработчик события;
-
-
 ### Класс Model (src/components/base/Model.ts)
-
 Базовый класс для моделей данных, обеспечивающий работу с состоянием приложения.
 
 поля:
-
 - protected events: EventEmitter - экземпляр EventEmitter для работы с событиями;
 - protected state: IAppState - текущее состояние приложения;
 
 методы:
-
 - protected setState(newState: Partial<IAppState>): void - обновляет состояние;
 - getState(): IAppState - возвращает текущее состояние;
 - on(event: string, callback: (data: any) => void): void - подписка на события;
 - off(event: string, callback: (data: any) => void): void - отписка от событий;
 
 
-### Класс LarekAPI (src/components/LarekAPI.ts)
+## Компоненты
 
-Расширяет базовый ApiClient, реализует специфичные для приложения API-запросы.
+### Класс AppData (src/components/AppData.ts)
+Хранение текущего состояния (товары, корзина, заказ), координация работы других компонентов.
 
 поля:
-
--  - ;
--  - ;
+- private _products: ;
+- private _cart: ;
+- private _order: ;
+- private _preview: ;
 
 методы:
+- loadProducts() - загрузка товаров с сервера;
+- updateBasket() - обновление состояния корзины;
+- submitOrder() - оформление заказа;
 
+
+### Класс Card (src/components/Card.ts)
+Управляет отображением товара, обрабатывает взаимодействия, интегрируется с API.
+
+поля:
+- _title - Заголовок карточки;
+- _image - Изображение товара;
+- _price - Цена товара;
+- _category - Категория товара;
+- _button - Кнопка действия;
+- _index - Индекс товара в корзине;
+
+конструктор:
+- constructor(container: HTMLElement, actions?: ICardActions) - Инициализирует DOM-элементы карточки;
+
+геттер:
+- get containerElement() - Возвращает корневой DOM-элемент карточки;
+
+сеттеры:
+- set id(value)	- Устанавливает data-id для контейнера;
+- set title(value) - Обновляет текст в _title;
+- set price(value) - Форматирует цену (например, "100 синапсов");
+- set category(value) - Устанавливает текст и CSS-класс для категории (например, card__category_soft);
+- set image(value) - Меняет src и alt у изображения;
+- set index(value) - Обновляет индекс товара в корзине;
+
+
+### Класс LarekAPI (src/components/LarekAPI.ts)
+Расширяет базовый ApiClient, реализует специфичные для приложения API-запросы.
+
+конструктор:
+- constructor(baseUrl: string, protected cdnUrl: string);
+
+методы:
 - async getProductList(): Promise<IProduct[]> - получает список товаров;
 - async orderProducts(order: IOrder): Promise<IOrderResult> - отправляет заказ на сервер;
 
 
-### Модели данных
+### Класс Order (src/components/Order.ts)
+Управляет формой заказа, генерирует события, интегрируется с системой событий.
 
-Интерфейс Product (src/types/index.ts)
+конструктор:
+- constructor(container: HTMLElement, events: IEvents) - Инициализирует форму заказа и настраивает обработчик отправки.
 
-interface Product {
-  id: string;
-  title: string;
-  price: number | null;
-  description?: string;
-  image?: string;
-  category?: Category;
-}
+поля:
+- _button - Кнопка отправки формы (например, «Оформить заказ»);
+- _errors - Контейнер для отображения ошибок валидации;
+- events - Объект для работы с событиями (например, EventEmitter);
 
-Интерфейс IOrderForm (src/types/index.ts)
+геттер:
+- get containerElement() - возвращает корневой DOM-элемент формы;
 
-interface IOrderForm {
-  payment: string;
-  address: string;
-  email: string;
-  phone: string;
-}
+сеттеры:
+- set valid(value) - блокирует/разблокирует кнопку (!value → кнопка неактивна);
+- set address(value) - устанавливает значение поля «Адрес» в форме;
+- set errors(value) - отображает текст ошибок в контейнере _errors;
 
-Интерфейс IOrderData extends IOrderForm (src/types/index.ts)
-
-interface IOrderData extends IOrderForm {
-  id: string[];
-  total: number;
-}
-
-Интерфейс ICartItem extends Product (src/types/index.ts)
-
-interface ICartItem extends Product {
-  quantity: number;
-}
-
-Интерфейс ICard (src/types/index.ts)
-
-interface ICard {
-  id: string;
-  title: string;
-  price: number | null;
-  category?: Category;
-  description?: string;
-  image?: string;
-  index?: number;
-}
-
-Интерфейс IOrderResult (src/types/index.ts)
-
-interface IOrderResult {
-  id: string;
-  total: number;
-}
-
-Интерфейс IFormErrors (src/types/index.ts)
-
-interface IFormErrors {
-  payment?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-}
-
-Интерфейс IModalData (src/types/index.ts)
-
-interface IModalData {
-  content: HTMLElement;
-}
-
-### UI-компоненты
-
-Компонент	    Ответственность	               События
-
-ProductCard	  Отображение карточки товара	   addToCart, preview;
-Basket	      Управление корзиной	           checkout, removeItem;
-OrderForm	    Многошаговая форма заказа	     submit, validate;
-Modal	        Управление модальными окнами	 open, close;
-
-Пример ProductCard:
-
-class ProductCard extends Component {
-  constructor(product: IProduct) {
-    super();
-    this.render = () => `
-      <div class="card">
-        <span class="card__category">${product.category}</span>
-        <h3 class="card__title">${product.title}</h3>
-        <div class="card__price">${product.price ?? 'Бесценно'}</div>
-      </div>
-    `;
-  }
-}
 
 ### Класс Page (src/components/Page.ts)
-
 Управляет отображением страницы и основными DOM-элементами.
 
 поля:
-
 - protected basket: Basket - экземпляр корзины;
-- protected modal: Modal - экземпляр модального окна
+- protected modal: Modal - экземпляр модального окна;
 
 методы:
-
 - render(): HTMLElement - рендерит основную страницу;
 - setCatalog(items: IProduct[]): void - отображает каталог товаров;
 - setCounter(count: number): void - обновляет счетчик товаров в корзине;
 
-### Класс Basket (src/components/common/Basket.ts)
 
+## Общие классы
+
+### Класс Basket (src/components/common/Basket.ts)
 Управляет корзиной товаров.
 
 поля:
-
 - protected items: IProduct[] - товары в корзине;
 - protected total: number - общая стоимость
 
 методы:
-
 - add(item: IProduct): void - добавляет товар в корзину;
 - remove(id: string): void - удаляет товар из корзины;
 - clear(): void - очищает корзину;
@@ -320,29 +283,61 @@ class ProductCard extends Component {
 
 
 ### Класс Form (src/components/common/Form.ts)
-
 Базовый класс для форм ввода данных.
 
 поля:
-
 - protected valid: boolean - флаг валидности формы;
 - protected errors: IFormErrors - ошибки валидации;
 
 методы:
-
 - validate(): boolean - проверяет валидность формы;
 - clear(): void - очищает форму;
 - setErrors(errors: IFormErrors): void - устанавливает ошибки;
 
 ### Класс Modal (src/components/common/Modal.ts)
-
 Управляет модальными окнами.
 
 методы:
-
 - open(content: HTMLElement): void - открывает модальное окно;
 - close(): void - закрывает модальное окно;
 - private handleClose(e: Event): void - обработчик закрытия;
+
+### Класс Success (src/components/common/Modal.ts)
+Реализует окно с подтверждением заказа.
+
+поля:
+- _close - элемент кнопки закрытия окна;
+- _total - элемент с суммой заказа;
+
+сеттер:
+- total - меняет содержимое элемента с суммой заказа;
+
+
+### Интерфейсы (src/types/index.ts)
+
+- interface Product;
+- interface IOrderForm;
+- interface IOrderData extends IOrderForm;
+- interface ICartItem extends Product;
+- interface ICard;
+- interface IOrderResult;
+- interface IFormErrors;
+- interface IModalData;
+
+
+## Поток данных
+
+### Инициализация:
+- Page -> (запрос) -> LarekAPI -> (ответ) -> AppData;
+- AppData обновляет состояние -> Page отображает товары;
+
+### Добавление в корзину:
+- ProductCard (click) -> EventEmitter -> AppData;
+- AppData обновляет cart -> Basket (через EventEmitter);
+
+### Оформление заказа:
+- OrderForm (submit) -> EventEmitter -> AppData;
+- AppData -> LarekAPI -> Success/Error;
 
 
 ## Взаимодействие компонентов
@@ -371,71 +366,32 @@ OrderForm отображает форму ввода данных;
 При успешном заполнении отправляет данные через LarekAPI;
 
 
-## Типы данных
+## API взаимодействие с сервером
++---------------------------------------------------------------------------------------------+
+| Метод    | Эндпоинт         | Описание                                                      |
+|----------|------------------|---------------------------------------------------------------|
+| `GET`    | `/products`      | Получает список всех товаров. Возвращает `Product[]`.         |
+| `GET`    | `/product/{id}`  | Получение детальной информации о конкретном товаре `Product`. |
+| `POST`   | `/orders`        | Создает новый заказ. Требует все поля из `IOrderData`.        |
+| `DELETE` | `/orders/{id}`   | Отменяет заказ по ID. Доступно только в статусе "не оплачен". |
++---------------------------------------------------------------------------------------------+
 
-Тип FormField (src/types/index.ts)
 
-type FormField = {
-  name: string;
-  value: string;
-  valid: boolean;
-  errors: string[];
-}
 
-Тип ApiListResponse (src/types/index.ts)
 
-type ApiListResponse<Type> = {
-  total: number;
-  items: Type[];
-}
+### Примеры запросов
 
-Тип PaymentMethod (src/types/index.ts)
 
-type PaymentMethod = 'online' | 'offline' | null;
-Дополнительные утилиты (src/utils/utils.ts)
+## Обработка ошибок
 
-Функции:
-
-- ensureElement<T>(element: T | null): T - проверяет что элемент существует;
-- cloneTemplate<T>(template: HTMLTemplateElement): T - клонирует шаблон;
-- formatNumber(value: number): string - форматирует число (цена);
-- validateEmail(email: string): boolean - проверяет email;
-- validatePhone(phone: string): boolean - проверяет телефон
-
-### Основные интерфейсы
-
-Состояние приложения:
-interface IAppState {
-  products: IProduct[];
-  basket: IProduct[];
-  order: IOrder;
-  loading: boolean;
-  error: string | null;
-}
-
-События:
-type AppEvents = {
-  'basket:changed': IProduct[];
-  'order:submitted': IOrder;
-  'modal:opened': { type: string };
-}
-
-### API Endpoints
-
-Метод	  Эндпоинт	 Описание
-
-GET	    /products	 Получение списка товаров;
-POST	  /orders	   Создание заказа;
-
-Пример запроса:
-
-class ApiClient {
-  async getProducts(): Promise<IProduct[]> {
-    const response = await fetch('/products');
-    return this.handleResponse(response);
-  }
-}
-
+### Стандартные HTTP-статусы
++---------------------------------------------------------------------+
+| Код  | Тип ошибки           | Типичные сценарии                     |
+|------|----------------------|---------------------------------------|
+| `400`| Bad Request          | Неверный формат данных в запросе      |
+| `404`| Not Found            | Товар или заказ не существует         |
+| `500`| Internal Server Error| Ошибка на сервере                     |
++---------------------------------------------------------------------+
 
 ## Функциональные требования
 
