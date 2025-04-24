@@ -1,12 +1,12 @@
 import "./scss/styles.scss";
-import { Component } from "./components/base/Component";
+
 import { EventEmitter } from "./components/base/events";
 import { Modal } from "./components/common/Modal";
 import { Basket } from "./components/common/Basket";
 import { Order } from "./components/Order";
 import { LarekAPI } from "./components/LarekAPI";
 import { Card } from "./components/Card";
-import { Product, ICartItem, IOrderData, Category, ICard } from "./types";
+import { Product, ICartItem, IOrderData, ICard } from "./types";
 import { API_URL, CDN_URL } from "./utils/constants";
 import { ensureElement, cloneTemplate } from "./utils/utils";
 
