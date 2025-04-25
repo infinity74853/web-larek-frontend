@@ -35,6 +35,11 @@ const order = new Order(cloneTemplate(orderTemplate), events);
 const appContainer = ensureElement('#app-container');
 const basketCounter = ensureElement('.header__basket-counter');
 
+const basketButton = ensureElement('.header__basket');
+basketButton.addEventListener('click', () => {
+    events.emit('basket:open');
+});
+
 // Состояние приложения
 const state = {
     products: [] as Product[],
@@ -205,7 +210,10 @@ function showSuccess() {
 // Инициализация
 events.on('order:open', initOrder);
 events.on('order:submit', initContacts);
-events.on('basket:open', () => modal.render({ content: basket.getContainer() }));
+events.on('basket:open', () => {
+    modal.render({ content: basket.getContainer() });
+    modal.open();
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
