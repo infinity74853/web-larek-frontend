@@ -19,7 +19,7 @@ HTML, SCSS, TypeScript в ООП-стиле. Webpack.
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
 
-## Установка и запуск
+### Установка и запуск
 
 Для установки и запуска проекта необходимо выполнить команды
 
@@ -35,7 +35,7 @@ yarn
 yarn start
 ```
 
-## Сборка
+### Сборка
 
 ```
 npm run build
@@ -91,7 +91,7 @@ yarn build
 
 ## 3. Базовый код
 
-### class Api (src/components/base/api.ts)
+### class Api `(src/components/base/api.ts)`
 
 Реализует при работе с API: отправку запросов, получение ответов, приведение полученных данных в массив.
 
@@ -106,11 +106,11 @@ yarn build
 
 Методы:
 
-- protected handleResponse(response: Response): Promise<object> // Обработка ответа 
+- protected handleResponse(response: Response): Promise&lt;object> // Обработка ответа
 - get(uri: string) // Отправляет GET-запрос по адресу baseUrl + uri
 - post(uri, data, method) // Отправляет POST/PUT-запрос с телом data (сериализуемым в JSON);
 
-### abstract class Component<T> (src/components/base/Component.ts)
+### abstract class Component&lt;T&gt; `(src/components/base/Component.ts)`
 
 Базовый абстрактный класс для всех UI-компонентов, реализующий общую логику работы с DOM.
 
@@ -130,15 +130,15 @@ setDisabled(element: HTMLElement, state: boolean) // Сменить статус
 protected setHidden(element: HTMLElement) // Скрыть
 protected setVisible(element: HTMLElement) // Показать
 protected setImage(element: HTMLImageElement, src: string, alt?: string) // Установить изображение с альтернативным текстом
-render(data?: Partial<T>): HTMLElement // Вернуть корневой DOM-элемент
+render(data?: Partial&lt;T&gt;): HTMLElement // Вернуть корневой DOM-элемент
 
-### class EventEmitter implements IEvents (src/components/base/events.ts)
+### class EventEmitter implements IEvents `(src/components/base/events.ts)`
 
 Брокер событий, централизованная система событий (реализует паттерн "Наблюдатель").
 
 Cвойства:
 
-- _events: Map<EventName, Set<Subscriber>> // хранит подписки на события
+- _events: Map&lt;EventName, Set&lt;Subscriber&gt;&gt; // хранит подписки на события
 
 Конструктор:
 
@@ -146,14 +146,14 @@ Cвойства:
 
 Методы:
 
-- on<T extends object>(eventName: EventName, callback: (event: T) // подписка на событие
+- on`<T extends object>`(eventName: EventName, callback: (event: T)) // подписка на событие
 - off(eventName: EventName, callback: Subscriber) // отписывает от события
-- emit<T extends object>(eventName: string, data?: T) // инициирует событие
+- emit&lt;T extends object>`(eventName: string, data?: T) // инициирует событие
 - onAll(callback: (event: EmitterEvent) => void) // подписывает на все события
 - offAll() // сбрасывает все подписки;
-- trigger<T extends object>(eventName: string, context?: Partial<T>) // возвращает функцию, которая при вызове инициирует событие
+- trigger&lt;T extends object&gt;(eventName: string, context?: Partial&lt;T&gt;) // возвращает функцию, которая при вызове инициирует событие
 
-### abstract class Model<T> (src/components/base/Model.ts)
+### abstract class Model&lt;T&gt; `(src/components/base/Model.ts)`
 
 Базовый класс для моделей данных, обеспечивающий работу с состоянием приложения.
 
@@ -163,7 +163,7 @@ Cвойства:
 
 конструктор:
 
-- constructor(data: Partial<T>, protected events: IEvents) // базовый конструктор для всех моделей
+- constructor(data: Partial&lt;T>, protected events: IEvents) // базовый конструктор для всех моделей
 
 методы:
 
@@ -171,7 +171,7 @@ Cвойства:
 
 ## 4. Компоненты слоя View
 
-### Класс AppData (src/components/AppData.ts)
+### Класс AppData `(src/components/AppData.ts)`
 
 Хранение текущего состояния (товары, корзина, заказ).
 
@@ -188,7 +188,7 @@ Cвойства:
 - updateBasket() - обновление состояния корзины;
 - submitOrder() - оформление заказа;
 
-### Класс Card (src/components/Card.ts)
+### Класс Card `(src/components/Card.ts)`
 
 Управляет отображением товара, обрабатывает взаимодействия, интегрируется с API.
 
@@ -218,7 +218,7 @@ Cвойства:
 - set image(value) - Меняет src и alt у изображения;
 - set index(value) - Обновляет индекс товара в корзине;
 
-### Класс LarekAPI (src/components/LarekAPI.ts)
+### Класс LarekAPI `(src/components/LarekAPI.ts)`
 
 Расширяет базовый ApiClient, формирование ссылок через CDN.
 
@@ -229,9 +229,9 @@ Cвойства:
 методы:
 
 - async getProductList(): Promise<IProduct[]> - получает список товаров;
-- async orderProducts(order: IOrder): Promise<IOrderResult> - отправляет заказ на сервер;
+- async orderProducts(order: IOrder): Promise`<IOrderResult>` - отправляет заказ на сервер;
 
-### Класс Order (src/components/Order.ts)
+### Класс Order `(src/components/Order.ts)`
 
 Управляет формой заказа, генерирует события, интегрируется с системой событий.
 
@@ -255,7 +255,7 @@ Cвойства:
 - set address(value) - устанавливает значение поля «Адрес» в форме;
 - set errors(value) - отображает текст ошибок в контейнере _errors;
 
-### Класс Page (src/components/Page.ts)
+### Класс Page `(src/components/Page.ts)`
 
 Управляет отображением страницы и основными DOM-элементами.
 
@@ -270,7 +270,7 @@ Cвойства:
 - setCatalog(items: IProduct[]): void - отображает каталог товаров;
 - setCounter(count: number): void - обновляет счетчик товаров в корзине;
 
-### Класс Basket (src/components/common/Basket.ts)
+### Класс Basket `(src/components/common/Basket.ts)`
 
 Управляет корзиной товаров.
 
@@ -286,7 +286,7 @@ Cвойства:
 - clear(): void - очищает корзину;
 - getTotal(): number - возвращает общую стоимость;
 
-### Класс Form (src/components/common/Form.ts)
+### Класс Form `(src/components/common/Form.ts)`
 
 Базовый класс для форм ввода данных.
 
@@ -301,7 +301,7 @@ Cвойства:
 - clear(): void - очищает форму;
 - setErrors(errors: IFormErrors): void - устанавливает ошибки;
 
-### Класс Modal (src/components/common/Modal.ts)
+### Класс Modal `(src/components/common/Modal.ts)`
 
 Управляет модальными окнами.
 
@@ -311,7 +311,7 @@ Cвойства:
 - close(): void - закрывает модальное окно;
 - private handleClose(e: Event): void - обработчик закрытия;
 
-### Класс Success (src/components/common/Modal.ts)
+### Класс Success `(src/components/common/Success.ts)`
 
 Реализует окно с подтверждением заказа.
 
@@ -335,7 +335,7 @@ Cвойства:
 - interface IFormErrors;
 - interface IModalData;
 
-## Поток данных
+## 5. Поток данных
 
 ### Инициализация
 
@@ -352,7 +352,7 @@ Cвойства:
 - OrderForm (submit) -> EventEmitter -> AppData;
 - AppData -> LarekAPI -> Success/Error;
 
-## Взаимодействие компонентов
+## 6. Взаимодействие компонентов
 
 Пользователь взаимодействует с View;
 View генерирует события через EventEmitter;
@@ -377,7 +377,7 @@ Basket генерирует событие 'order:open';
 OrderForm отображает форму ввода данных;
 При успешном заполнении отправляет данные через LarekAPI;
 
-## API взаимодействие с сервером
+## 7. API взаимодействие с сервером
 
 | Метод    | Эндпоинт         | Описание                                                      |
 |----------|------------------|---------------------------------------------------------------|
@@ -385,7 +385,7 @@ OrderForm отображает форму ввода данных;
 | `GET`    | `/product/{id}`  | Получение детальной информации о конкретном товаре `Product`. |
 | `POST`   | `/orders`        | Создает новый заказ. Требует все поля из `IOrderData`.        |
 
-## Функциональные требования
+## 8. Функциональные требования
 
 Главная страница:
 
