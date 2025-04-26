@@ -108,7 +108,7 @@ yarn build
 
 - protected handleResponse(response: Response): Promise<object> // Обработка ответа 
 - get(uri: string) // Отправляет GET-запрос по адресу baseUrl + uri
-- post(uri, data, method) // Отправляет POST/PUT-запрос с телом data (сериализуемым в JSON)
+- post(uri, data, method) // Отправляет POST/PUT-запрос с телом data (сериализуемым в JSON);
 
 ### abstract class Component<T> (src/components/base/Component.ts)
 
