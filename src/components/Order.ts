@@ -1,41 +1,68 @@
 import { Component } from "./base/Component";
-import { IEvents } from "./base/events";
 import { ensureElement } from "../utils/utils";
+import { EventEmitter } from "./base/events";
 import { IOrderForm } from "../types";
 
 export class Order extends Component<IOrderForm> {
-    protected _button: HTMLButtonElement;
+    protected _submitButton: HTMLButtonElement;
     protected _errors: HTMLElement;
+    protected _paymentButtons: NodeListOf<HTMLButtonElement>;
+    protected _addressInput: HTMLInputElement;
 
-    constructor(container: HTMLElement, protected events: IEvents) {
+    constructor(container: HTMLFormElement, protected events: EventEmitter) {
         super(container);
 
-        this._button = ensureElement<HTMLButtonElement>('button[type=submit]', this.container);
-        this._errors = ensureElement<HTMLElement>('.form__errors', this.container);
+        this._submitButton = ensureElement<HTMLButtonElement>('button[type=submit]', container);
+        this._errors = ensureElement<HTMLElement>('.form__errors', container);
+        this._paymentButtons = container.querySelectorAll('.button_alt');
+        this._addressInput = ensureElement<HTMLInputElement>('input[name=address]', container);
 
-        this._button.addEventListener('click', () => {
-            events.emit('order:submit', this.getValues());
+        this._paymentButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const payment = button.getAttribute('name');
+                this.togglePayment(payment);
+                events.emit('order:payment', { payment });
+            });
+        });
+
+        this._addressInput.addEventListener('input', () => {
+            events.emit('order:address', { 
+                address: this._addressInput.value 
+            });
+        });
+
+        this._submitButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            events.emit('order:submit');
         });
     }
 
-    set valid(value: boolean) {
-        this.setDisabled(this._button, !value);
+    private togglePayment(payment: string | null) {
+        this._paymentButtons.forEach(button => {
+            button.classList.toggle(
+                'button_alt-active', 
+                button.getAttribute('name') === payment
+            );
+        });
     }
-    
+
     set address(value: string) {
-        (this.container.querySelector('[name="address"]') as HTMLInputElement).value = value;
+        this._addressInput.value = value;
+    }
+
+    set payment(value: string) {
+        this.togglePayment(value);
     }
 
     set errors(value: string) {
         this.setText(this._errors, value);
     }
 
-    private getValues(): IOrderForm {
-        const form = this.container.querySelector('form');
-        return Object.fromEntries(new FormData(form!)) as unknown as IOrderForm;
+    set valid(value: boolean) {
+        this.setDisabled(this._submitButton, !value);
     }
 
-    // Добавляем публичный геттер для container
+    // Добавляем публичный метод для доступа к container
     get containerElement(): HTMLElement {
         return this.container;
     }

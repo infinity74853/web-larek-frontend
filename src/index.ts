@@ -6,18 +6,13 @@ import { Basket } from "./components/common/Basket";
 import { Order } from "./components/Order";
 import { LarekAPI } from "./components/LarekAPI";
 import { Card } from "./components/Card";
+import { AppData } from "./components/AppData";
 import { Product, ICartItem, IOrderData, ICard } from "./types";
 import { API_URL, CDN_URL } from "./utils/constants";
 import { ensureElement, cloneTemplate } from "./utils/utils";
 
 // Инициализация API
 const api = new LarekAPI(API_URL, CDN_URL);
-
-// Инициализация событий
-const events = new EventEmitter();
-
-const modalContainer = document.querySelector('#modal-container') as HTMLElement;
-if (!modalContainer) throw new Error('Modal container not found');
 
 // Шаблоны
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
@@ -28,17 +23,17 @@ const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
-// Основные компоненты
-const modal = new Modal(ensureElement('#modal-container'), events);
+// Инициализация компонентов
+const events = new EventEmitter();
+const modal = new Modal(ensureElement('#modal-container'));
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 const order = new Order(cloneTemplate(orderTemplate), events);
+const appData = new AppData(cardPreviewTemplate, events);
+
+// DOM элементы
 const appContainer = ensureElement('#app-container');
 const basketCounter = ensureElement('.header__basket-counter');
-
 const basketButton = ensureElement('.header__basket');
-basketButton.addEventListener('click', () => {
-    events.emit('basket:open');
-});
 
 // Состояние приложения
 const state = {
@@ -73,7 +68,8 @@ function renderProducts(products: Product[]) {
             title: product.title,
             image: product.image,
             price: product.price,
-            category: product.category
+            category: product.category,
+            description: product.description
         });
         fragment.appendChild(card.getContainer());
     });
@@ -96,7 +92,11 @@ function addToCart(product: Product) {
 function updateCart() {
     const items = state.cart.items.map((item, index) => {
         const card = new Card(cloneTemplate(cardBasketTemplate), {
-            onClick: () => removeFromCart(item.id)
+            onClick: (e: Event) => {
+                e.preventDefault();
+                e.stopPropagation();
+                removeFromCart(item.id);
+            }
         });
         card.render({
             id: item.id,
@@ -116,6 +116,7 @@ function removeFromCart(id: string) {
     state.cart.items = state.cart.items.filter(item => item.id !== id);
     updateCart();
 }
+
 function showPreview(product: Product) {
     const preview = new Card(cloneTemplate(cardPreviewTemplate), {
         onClick: () => {
@@ -133,24 +134,22 @@ function showPreview(product: Product) {
         description: product.description
     });
     
-    modal.render({ content: preview.getContainer() });
+    modal.content = preview.getContainer();
     modal.open();
 }
-
-events.on('card:preview', (product: Product) => showPreview(product));
 
 // Модальные окна
 function showNotification(message: string) {
     const notification = document.createElement('div');
     notification.classList.add('notification');
     notification.textContent = message;
-    modal.render({ content: notification });
+    modal.content = notification;
     setTimeout(() => modal.close(), 2000);
 }
 
 // Оформление заказа
 function initOrder() {
-    modal.render({ content: order.getContainer() });
+    modal.content = order.getContainer();
 }
 
 function initContacts() {
@@ -184,7 +183,7 @@ function initContacts() {
         }
     });
     
-    modal.render({ content: contacts });
+    modal.content = contacts;
 }
 
 function showSuccess() {
@@ -204,17 +203,22 @@ function showSuccess() {
         });
     }
     
-    modal.render({ content: success });
+    modal.content = success;
 }
 
-// Инициализация
+// Обработчики событий
+basketButton.addEventListener('click', () => {
+    events.emit('basket:open');
+});
+
 events.on('order:open', initOrder);
 events.on('order:submit', initContacts);
 events.on('basket:open', () => {
-    modal.render({ content: basket.getContainer() });
+    modal.content = basket.getContainer();
     modal.open();
 });
 
+// Загрузка данных
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         state.products = await api.getProducts();

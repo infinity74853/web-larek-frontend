@@ -1,16 +1,41 @@
 import { EventEmitter } from "./base/events";
 import { Product, ICartItem, IOrderData } from "../types";
+import { Card } from "./Card";
+import { cloneTemplate } from "../utils/utils";
+import { IEvents } from "./base/events";
 
 export class AppData extends EventEmitter {
     private _products: Product[] = [];
     private _cart: ICartItem[] = [];
     private _order: IOrderData | null = null;
     private _preview: Product | null = null;
-
-    constructor() {
+    private _previewTemplate: HTMLTemplateElement;
+    
+    constructor(
+        previewTemplate: HTMLTemplateElement,
+        protected events: IEvents // Добавляем events в параметры
+    ) {
         super();
+        this._previewTemplate = previewTemplate;        
     }
 
+    openProductPreview(product: Product) {
+        const card = new Card(cloneTemplate(this._previewTemplate), {
+            onClick: (e) => {
+                e.stopPropagation(); // Важно!
+                this.addToCart(product);
+            }
+        });
+        
+        // Чистая событийная модель
+        this.events.emit('preview:open', {
+            content: card.render({
+                /* данные */
+            })
+        });
+    }
+
+    // Остальные методы без изменений
     get products(): Product[] {
         return this._products;
     }
@@ -47,7 +72,10 @@ export class AppData extends EventEmitter {
         this.emit('cart:changed', { items: this._cart });
     }
 
-    removeFromCart(id: string): void {
+    removeFromCart(id: string, event?: Event): void {
+        if (event) {
+            event.stopPropagation(); // Останавливаем всплытие
+        }
         this._cart = this._cart.filter(item => item.id !== id);
         this.emit('cart:changed', { items: this._cart });
     }

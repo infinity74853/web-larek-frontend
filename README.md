@@ -48,11 +48,10 @@ yarn build
 
 ```
 
-## О проекте
+## 1. О проекте
 
 Проект представляет собой приложение интернет-магазин для продажи цифровых товаров,
 реализованное на TypeScript с использованием ООП-подхода и архитектуры MVP.
-
 
 ### Приложение включает в себя
 
@@ -62,7 +61,6 @@ yarn build
 - управление корзиной;
 - отправка данных о заказе на сервер;
 
-
 ### Бизнес логика
 
 - добавление и удаление товара в корзину;
@@ -70,33 +68,13 @@ yarn build
 - ввод данных;
 - валидация форм заказа;
 - расчёт общей стоимости;
-- история заказов;
-- покупка бесценных товаров;
-- обработка ошибок API;
-
-
-### В коде используются cart (состояние) и basket (UI)
-
-- Basket
-Это UI-компонент, который отвечает за отображение корзины на экране:
-Визуализация списка товаров в корзине;
-Отображение общей суммы;
-Обработка кликов (например, открытие формы заказа);
-
-- Cart
-Это часть состояния приложения, которая хранит данные о выбранных товарах:
-Хранение списка товаров (items);
-Подсчёт общей суммы (total);
-Логика добавления/удаления товаров;
-
 
 ### Техническая реализация
 
 - MVP для разделения ответственности
 - EventEmitter для связывания компонентов
 
-
-## Архитектура проекта
+## 2. Архитектура проекта
 
 В проекте используется архитектурный шаблон MVP (Model-View-Presenter).
 Он разделяет приложение на три основных компонента:
@@ -105,98 +83,117 @@ yarn build
 - представление (View) - тображает данные пользователю и обрабатывает пользовательский ввод;
 - презентер (Presenter) - правляет взаимодействием между моделью и представлением.
 
-
 ### Ключевые принципы
 
 Изолированность: Каждый модуль работает независимо;
 Единая ответственность: Четкое разделение на Model-View-Presenter;
 Масштабируемость: Легко добавлять новые функции без изменения ядра;
 
+## 3. Базовый код
 
-## Базовые классы
+### class Api (src/components/base/api.ts)
 
-### Класс Api (src/components/base/api.ts)
-Реализует при работе с API: отправку запросов, получение ответов, приведение полученных данных в массив, формирование ссылок через CDN;
+Реализует при работе с API: отправку запросов, получение ответов, приведение полученных данных в массив.
 
-поля:
-- readonly baseUrl - базовый адрес сервера;
-- protected options - Настройки HTTP-запросов (заголовки, метод и т.д.);
+Свойства:
 
-конструктор:
-- constructor(baseUrl: string, options: RequestInit = {}) - Инициализирует базовый URL и настройки запросов;
+- readonly baseUrl: string; // базовый адрес сервера
+- protected options: RequestInit; // Настройки HTTP-запросов (заголовки, метод и т.д.)
 
-методы:
-- get(uri) - Отправляет GET-запрос по адресу baseUrl + uri;
-- post(uri, data, method) - Отправляет POST/PUT-запрос с телом data (сериализуемым в JSON);
+Конструктор:
 
+- constructor(baseUrl: string, options: RequestInit = {}) // Инициализирует базовый URL и настройки запросов
 
-### Класс Component (src/components/base/Component.ts)
-Базовый класс для всех UI-компонентов, реализующий общую логику работы с DOM.
+Методы:
 
-поля:
-- protected container(): HTMLElement - контейнер компонента;
+- get(uri: string) // Отправляет GET-запрос по адресу baseUrl + uri
+- post(uri, data, method) // Отправляет POST/PUT-запрос с телом data (сериализуемым в JSON);
+- protected handleResponse(response: Response): Promise<object>
 
-конструктор:
-- protected constructor(container: HTMLElement) - Базовый конструктор для всех компонентов;
+### abstract class Component<T> (src/components/base/Component.ts)
 
-методы:
-- render(): HTMLElement - возвращает сконструированный DOM-элемент;
-- protected setEvent(event: string, callback: (e: Event) => void): void - устанавливает обработчик события;
-- protected removeEvent(event: string): void - удаляет обработчик события;
+Базовый абстрактный класс для всех UI-компонентов, реализующий общую логику работы с DOM.
 
+Свойства:
 
-### Класс EventEmitter (src/components/base/events.ts)
+- protected readonly container: HTMLElement // Корневой DOM-элемент
+
+Конструктор:
+
+- protected constructor(protected readonly container: HTMLElement)
+
+Методы:
+
+toggleClass(element: HTMLElement, className: string, force?: boolean) // Переключить класс
+protected setText(element: HTMLElement, value: unknown) // Установить текстовое содержимое
+setDisabled(element: HTMLElement, state: boolean) // Сменить статус блокировки
+protected setHidden(element: HTMLElement) // Скрыть
+protected setVisible(element: HTMLElement) // Показать
+protected setImage(element: HTMLImageElement, src: string, alt?: string) // Установить изображение с альтернативным текстом
+render(data?: Partial<T>): HTMLElement // Вернуть корневой DOM-элемент
+
+### class EventEmitter implements IEvents (src/components/base/events.ts)
+
 Брокер событий, централизованная система событий (реализует паттерн "Наблюдатель").
 
-поля:
-- _events - хранит подписки на события;
+Cвойства:
 
-конструктор:
-- constructor() - инициализирует карту _events;
+- _events: Map<EventName, Set<Subscriber>> // хранит подписки на события
 
-методы:
-- on - подписка на событие;
-- off - отписывает от события;
-- emit - инициирует событие;
-- onAll - подписывает на все события;
-- offAll - сбрасывает все подписки;
-- trigger - возвращает функцию, которая при вызове инициирует событие;
+Конструктор:
 
+- constructor() // инициализирует карту _events
 
-### Класс Model (src/components/base/Model.ts)
+Методы:
+
+- on<T extends object>(eventName: EventName, callback: (event: T) // подписка на событие
+- off(eventName: EventName, callback: Subscriber) // отписывает от события
+- emit<T extends object>(eventName: string, data?: T) // инициирует событие
+- onAll(callback: (event: EmitterEvent) => void) // подписывает на все события
+- offAll() // сбрасывает все подписки;
+- trigger<T extends object>(eventName: string, context?: Partial<T>) // возвращает функцию, которая при вызове инициирует событие
+
+### abstract class Model<T> (src/components/base/Model.ts)
+
 Базовый класс для моделей данных, обеспечивающий работу с состоянием приложения.
 
-поля:
-- protected events: EventEmitter - Система событий для уведомлений об изменениях модели;
+свойства:
+
+- protected events: EventEmitter // Система событий для уведомлений об изменениях модели
 
 конструктор:
-- constructor(data: Partial<T>, events: IEvents) - базовый конструктор для всех моделей;
+
+- constructor(data: Partial<T>, protected events: IEvents) // базовый конструктор для всех моделей
 
 методы:
-- emitChanges(event, payload?) - генерирует событие event через events.emit();
 
+- emitChanges(event: string, payload?: object) // генерирует событие event через events.emit()
 
-## Компоненты
+## 4. Компоненты слоя View
 
 ### Класс AppData (src/components/AppData.ts)
-Хранение текущего состояния (товары, корзина, заказ), координация работы других компонентов.
 
-поля:
+Хранение текущего состояния (товары, корзина, заказ).
+
+свойства:
+
 - private _products: ;
 - private _cart: ;
 - private _order: ;
 - private _preview: ;
 
 методы:
+
 - loadProducts() - загрузка товаров с сервера;
 - updateBasket() - обновление состояния корзины;
 - submitOrder() - оформление заказа;
 
-
 ### Класс Card (src/components/Card.ts)
+
 Управляет отображением товара, обрабатывает взаимодействия, интегрируется с API.
 
-поля:
+свойства:
+
 - _title - Заголовок карточки;
 - _image - Изображение товара;
 - _price - Цена товара;
@@ -205,110 +202,127 @@ yarn build
 - _index - Индекс товара в корзине;
 
 конструктор:
+
 - constructor(container: HTMLElement, actions?: ICardActions) - Инициализирует DOM-элементы карточки;
 
 геттер:
+
 - get containerElement() - Возвращает корневой DOM-элемент карточки;
 
 сеттеры:
-- set id(value)	- Устанавливает data-id для контейнера;
+
+- set id(value) - Устанавливает data-id для контейнера;
 - set title(value) - Обновляет текст в _title;
 - set price(value) - Форматирует цену (например, "100 синапсов");
 - set category(value) - Устанавливает текст и CSS-класс для категории (например, card__category_soft);
 - set image(value) - Меняет src и alt у изображения;
 - set index(value) - Обновляет индекс товара в корзине;
 
-
 ### Класс LarekAPI (src/components/LarekAPI.ts)
-Расширяет базовый ApiClient, реализует специфичные для приложения API-запросы.
+
+Расширяет базовый ApiClient, формирование ссылок через CDN.
 
 конструктор:
+
 - constructor(baseUrl: string, protected cdnUrl: string);
 
 методы:
+
 - async getProductList(): Promise<IProduct[]> - получает список товаров;
 - async orderProducts(order: IOrder): Promise<IOrderResult> - отправляет заказ на сервер;
 
-
 ### Класс Order (src/components/Order.ts)
+
 Управляет формой заказа, генерирует события, интегрируется с системой событий.
 
 конструктор:
+
 - constructor(container: HTMLElement, events: IEvents) - Инициализирует форму заказа и настраивает обработчик отправки.
 
-поля:
+свойства:
+
 - _button - Кнопка отправки формы (например, «Оформить заказ»);
 - _errors - Контейнер для отображения ошибок валидации;
 - events - Объект для работы с событиями (например, EventEmitter);
 
 геттер:
+
 - get containerElement() - возвращает корневой DOM-элемент формы;
 
 сеттеры:
+
 - set valid(value) - блокирует/разблокирует кнопку (!value → кнопка неактивна);
 - set address(value) - устанавливает значение поля «Адрес» в форме;
 - set errors(value) - отображает текст ошибок в контейнере _errors;
 
-
 ### Класс Page (src/components/Page.ts)
+
 Управляет отображением страницы и основными DOM-элементами.
 
-поля:
+свойства:
+
 - protected basket: Basket - экземпляр корзины;
 - protected modal: Modal - экземпляр модального окна;
 
 методы:
+
 - render(): HTMLElement - рендерит основную страницу;
 - setCatalog(items: IProduct[]): void - отображает каталог товаров;
 - setCounter(count: number): void - обновляет счетчик товаров в корзине;
 
-
-## Общие классы
-
 ### Класс Basket (src/components/common/Basket.ts)
+
 Управляет корзиной товаров.
 
-поля:
+свойства:
+
 - protected items: IProduct[] - товары в корзине;
 - protected total: number - общая стоимость
 
 методы:
+
 - add(item: IProduct): void - добавляет товар в корзину;
 - remove(id: string): void - удаляет товар из корзины;
 - clear(): void - очищает корзину;
 - getTotal(): number - возвращает общую стоимость;
 
-
 ### Класс Form (src/components/common/Form.ts)
+
 Базовый класс для форм ввода данных.
 
-поля:
+свойства:
+
 - protected valid: boolean - флаг валидности формы;
 - protected errors: IFormErrors - ошибки валидации;
 
 методы:
+
 - validate(): boolean - проверяет валидность формы;
 - clear(): void - очищает форму;
 - setErrors(errors: IFormErrors): void - устанавливает ошибки;
 
 ### Класс Modal (src/components/common/Modal.ts)
+
 Управляет модальными окнами.
 
 методы:
+
 - open(content: HTMLElement): void - открывает модальное окно;
 - close(): void - закрывает модальное окно;
 - private handleClose(e: Event): void - обработчик закрытия;
 
 ### Класс Success (src/components/common/Modal.ts)
+
 Реализует окно с подтверждением заказа.
 
-поля:
+свойства:
+
 - _close - элемент кнопки закрытия окна;
 - _total - элемент с суммой заказа;
 
 сеттер:
-- total - меняет содержимое элемента с суммой заказа;
 
+- total - меняет содержимое элемента с суммой заказа;
 
 ### Интерфейсы (src/types/index.ts)
 
@@ -321,21 +335,22 @@ yarn build
 - interface IFormErrors;
 - interface IModalData;
 
-
 ## Поток данных
 
-### Инициализация:
+### Инициализация
+
 - Page -> (запрос) -> LarekAPI -> (ответ) -> AppData;
 - AppData обновляет состояние -> Page отображает товары;
 
-### Добавление в корзину:
+### Добавление в корзину
+
 - ProductCard (click) -> EventEmitter -> AppData;
 - AppData обновляет cart -> Basket (через EventEmitter);
 
-### Оформление заказа:
+### Оформление заказа
+
 - OrderForm (submit) -> EventEmitter -> AppData;
 - AppData -> LarekAPI -> Success/Error;
-
 
 ## Взаимодействие компонентов
 
@@ -344,24 +359,23 @@ View генерирует события через EventEmitter;
 Presenter обрабатывает события и обновляет Model;
 Model уведомляет об изменениях через EventEmitter;
 
-### Инициализация приложения:
+### Инициализация приложения
 
 AppData - загружает товары через LarekAPI;
 Page - отображает каталог товаров;
 Basket - инициализируется пустой корзиной;
 
-### Добавление товара в корзину:
+### Добавление товара в корзину
 
 ProductCard генерирует событие 'card:select';
 AppData обновляет состояние корзины;
 Page обновляет счетчик товаров;
 
-### Оформление заказа:
+### Оформление заказa
 
 Basket генерирует событие 'order:open';
 OrderForm отображает форму ввода данных;
 При успешном заполнении отправляет данные через LarekAPI;
-
 
 ## API взаимодействие с сервером
 
@@ -370,18 +384,6 @@ OrderForm отображает форму ввода данных;
 | `GET`    | `/products`      | Получает список всех товаров. Возвращает `Product[]`.         |
 | `GET`    | `/product/{id}`  | Получение детальной информации о конкретном товаре `Product`. |
 | `POST`   | `/orders`        | Создает новый заказ. Требует все поля из `IOrderData`.        |
-
-
-### Обработка ошибок
-
-Стандартные HTTP-статусы
-
-| Код  | Тип ошибки           | Типичные сценарии                     |
-|------|----------------------|---------------------------------------|
-| `400`| Bad Request          | Неверный формат данных в запросе      |
-| `404`| Not Found            | Товар или заказ не существует         |
-| `500`| Internal Server Error| Ошибка на сервере                     |
-
 
 ## Функциональные требования
 
@@ -406,7 +408,7 @@ OrderForm отображает форму ввода данных;
 - товар с ценой 'null' ("Бесценно");
 - валидация форм ввода;
 
-### Общие требования:
+### Общие требования
 
 Модальные окна закрываются при клике вне модального окна, по клавише 'Esc' или по иконке «В корзину».
 Кнопка перехода к следующему шагу доступна только если действия на текущей странице выполнены (например, указание телефона и почты).

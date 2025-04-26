@@ -14,6 +14,8 @@ export class Card extends Component<ICard> {
     protected _category?: HTMLElement;
     protected _button?: HTMLButtonElement;
     protected _index?: HTMLElement;
+    protected _description?: HTMLElement;
+    protected _deleteButton?: HTMLButtonElement;
 
     constructor(container: HTMLElement, actions?: ICardActions) {
         super(container);
@@ -24,20 +26,39 @@ export class Card extends Component<ICard> {
         this._category = container.querySelector('.card__category');
         this._button = container.querySelector('.card__button');
         this._index = container.querySelector('.basket__item-index');
+        this._description = container.querySelector('.card__description');
+        this._deleteButton = container.querySelector('.basket__item-delete');
         
         if (actions?.onClick && this._button) {
             this._button.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation(); // Предотвращаем всплытие
                 actions.onClick!(e);
             });
         }
 
         if (actions?.onPreview) {
-            const previewButton = container.querySelector('.card__image') || 
-                                 container.querySelector('.card__title');
-            previewButton?.addEventListener('click', (e) => {
+            container.addEventListener('click', (e) => {
+                if (!(e.target as Element).closest('.card__button') && 
+                    !(e.target as Element).closest('.basket__item-delete')) {
+                    e.preventDefault();
+                    actions.onPreview!();
+                }
+            });
+        }
+
+        if (this._button && this._price.textContent === 'Бесценно' 
+            && !this._button.classList.contains('basket__item-delete')) {
+            this._button.disabled = true;
+            this._button.textContent = 'Не продается';
+            this._button.classList.add('disabled');
+        }
+
+        if (this._deleteButton) {
+            this._deleteButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                actions.onPreview!();
+                e.stopPropagation();  // Важно: останавливаем всплытие
+                actions?.onClick?.(e);  // Вызываем обработчик
             });
         }
     }
@@ -52,6 +73,13 @@ export class Card extends Component<ICard> {
 
     set price(value: number | null) {
         this.setText(this._price, value ? `${value} синапсов` : 'Бесценно');
+        
+        if (this._button && !this._button.classList.contains('basket__item-delete')) {
+            const isDisabled = value === null;
+            this._button.disabled = isDisabled;
+            this._button.textContent = isDisabled ? 'Не продается' : 'В корзину'; // Изменено здесь
+            this._button.classList.toggle('disabled', isDisabled);
+        }
     }
 
     set category(value: Category | undefined) {
@@ -80,5 +108,11 @@ export class Card extends Component<ICard> {
     // Добавляем публичный геттер для container
     get containerElement(): HTMLElement {
         return this.container;
+    }
+
+    set description(value: string | undefined) {
+        if (this._description) {
+            this.setText(this._description, value || '');
+        }
     }
 }
