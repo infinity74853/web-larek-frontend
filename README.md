@@ -110,7 +110,7 @@ yarn build
 - post(uri, data, method) // Отправляет POST/PUT-запрос с телом data (сериализуемым в JSON);
 - protected handleResponse(response: Response): Promise<object>
 
-### abstract class Component<T> (src/components/base/Component.ts)
+## abstract class Component<T> (src/components/base/Component.ts)
 
 Базовый абстрактный класс для всех UI-компонентов, реализующий общую логику работы с DOM.
 
