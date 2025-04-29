@@ -107,26 +107,7 @@ yarn build
 Масштабируемость: Легко добавлять новые функции без изменения ядра;
 Презентер отвечает за взаимодействие компонентов через брокер событий.
 
-## 3. Типы данных для взаимодействия с сервером
-
-### Данные Товара:
-
-- id: string;
-- title: string;
-- price: number | null;
-- category?: Category;
-- description?: string;
-- image?: string;
-- index?: number;
-
-### Данные для оформления заказа:
-
-- payment: string;
-- address: string;
-- email: string;
-- phone: string;
-
-## 4. Базовый код
+## 3. Базовый код
 
 ### class Api `(src/components/base/api.ts)`
 
@@ -215,7 +196,7 @@ Cвойства:
 
 - emitChanges(event: string, payload?: object)  // Генерирует событие event через events.emit()
 
-## 5. Компоненты слоя MODEL
+## 4. Компоненты слоя MODEL
 
 ### class AppData extends EventEmitter `(src/components/AppData.ts)`
 
@@ -261,7 +242,7 @@ Cвойства:
 - setPreview(product: Product)  // Устанавливает товар для превью
 - get preview()  // Возвращает текущий товар для превью
 
-## 6. Компоненты слоя VIEW
+## 5. Компоненты слоя VIEW
 
 ```
 interface IBasketView {
@@ -478,7 +459,7 @@ interface IPage {
 - set catalog(items: HTMLElement[])  // Обновляет содержимое каталога
 - set locked(value: boolean)  // Блокирует/разблокирует страницу
 
-## 7. PRESENTER `(src/index.ts)`
+## 6. PRESENTER `(src/index.ts)`
 
 Отвечает за взаимодействие компонентов через брокер событий EventEmitter.
 
@@ -498,7 +479,7 @@ interface IPage {
 | `'order:submit'`    | `Открывает форму контактов`            | `initContacts()`    |
 | `'showSuccess'`     | `Заказ успешно оформлен`               | `showSuccess()`     |
 
-## 8. Сервисы
+## 7. Сервисы
 
 ### class LarekAPI extends Api `(src/components/LarekAPI.ts)`
 
@@ -513,7 +494,7 @@ interface IPage {
 - async getProductList(): Promise`<IProduct[]>`  // Получает список товаров
 - async createOrder(order: IOrderData): Promise`<{ id: string }>`  // Отправляет заказ на сервер
 
-## 9. Поток данных
+## 8. Поток данных
 
 ### Инициализация
 
@@ -530,7 +511,7 @@ interface IPage {
 - OrderForm (submit) -> EventEmitter -> AppData;
 - AppData -> LarekAPI -> Success/Error;
 
-## 10. Взаимодействие компонентов
+## 9. Взаимодействие компонентов
 
 Пользователь взаимодействует с View;
 View генерирует события через EventEmitter;
@@ -555,7 +536,7 @@ Basket генерирует событие 'order:open';
 OrderForm отображает форму ввода данных;
 При успешном заполнении отправляет данные через LarekAPI;
 
-## 11. API взаимодействие с сервером
+## 10. API взаимодействие с сервером
 
 | Метод    | Эндпоинт         | Описание                                                      |
 |----------|------------------|---------------------------------------------------------------|
@@ -563,3 +544,22 @@ OrderForm отображает форму ввода данных;
 | `GET`    | `/product/{id}`  | Получение детальной информации о конкретном товаре `Product`. |
 | `POST`   | `/order`         | Объект с данными заказа (способ оплаты, адрес, email,         |
 |          |                  | телефон,список товаров, сумма). `IOrderData`.                 |
+
+### Типы данных для взаимодействия с сервером
+
+#### Данные Товара:
+
+- id: string;
+- title: string;
+- price: number | null;
+- category?: Category;
+- description?: string;
+- image?: string;
+- index?: number;
+
+#### Данные для оформления заказа:
+
+- payment: string;
+- address: string;
+- email: string;
+- phone: string;

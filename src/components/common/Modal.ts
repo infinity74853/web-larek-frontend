@@ -15,8 +15,13 @@ export class Modal extends Component<IModalData> {
 
         this._closeButton = ensureElement<HTMLButtonElement>('.modal__close', container);
         this._content = ensureElement<HTMLElement>('.modal__content', container);
+        this._closeButton.addEventListener('click', this.close.bind(this));
+        this.container.addEventListener('click', this.close.bind(this));
+        this._content.addEventListener('click', (event) => event.stopPropagation());
 
         this._setupEventListeners();
+
+        document.addEventListener('keydown', this._handleKeyDown.bind(this));
     }
 
     private _setupEventListeners() {
@@ -42,6 +47,7 @@ export class Modal extends Component<IModalData> {
         this._isOpened = true;
         document.body.classList.add('modal-open');
         this.container.classList.add('modal_active');
+        document.addEventListener('keydown', this._handleKeyDown.bind(this));
     }
 
     close() {
@@ -49,5 +55,13 @@ export class Modal extends Component<IModalData> {
         this._isOpened = false;
         document.body.classList.remove('modal-open');
         this.container.classList.remove('modal_active');
+        document.removeEventListener('keydown', this._handleKeyDown.bind(this));
+    }
+
+    // Новый метод для обработки нажатия клавиш
+    private _handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Escape') {
+            this.close();
+        }
     }
 }
