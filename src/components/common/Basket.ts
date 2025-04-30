@@ -1,68 +1,53 @@
 import { Component } from "../base/Component";
-import { createElement, ensureElement, formatNumber } from "../../utils/utils";
-import { EventEmitter } from "../base/Events";
+import { AppData } from "../AppData";
+import { Card } from "../Card";
+import { cloneTemplate } from "../../utils/utils";
+import { IEvents } from "../base/Events";
+import { ICard } from "../../types";
 
-interface IBasketView {
-    items: HTMLElement[];
-    total: number;
-}
-
-export class Basket extends Component<IBasketView> {
+export class Basket extends Component<HTMLElement> {
     protected _list: HTMLElement;
     protected _total: HTMLElement;
-    protected _button: HTMLElement;
-    protected _counter: HTMLElement;
+    protected _button: HTMLButtonElement;
 
-    constructor(container: HTMLElement, protected events: EventEmitter) {
+    constructor(
+        container: HTMLElement,
+        protected events: IEvents,
+        private appData: AppData,
+        private cardBasketTemplate: HTMLTemplateElement
+    ) {
         super(container);
+        this._list = this.container.querySelector('.basket__list');
+        this._total = this.container.querySelector('.basket__price');
+        this._button = this.container.querySelector('.basket__button');
+        this.initialize();
+    }
 
-        this._list = ensureElement<HTMLElement>('.basket__list', container);
-        this._total = ensureElement<HTMLElement>('.basket__price', container);
-        this._button = ensureElement<HTMLElement>('.basket__button', container);
-        this._counter = this.ensureCounterElement();
+    private initialize() {
+        this._list = this.container.querySelector('.basket__list');
+        this._total = this.container.querySelector('.basket__price');
+        this._button = this.container.querySelector('.basket__button');
+        
+        this.events.on('cart:changed', () => this.updateBasket());
+        this._button.addEventListener('click', () => this.events.emit('order:open'));
+    }
 
-        if (this._button) {
-            this._button.addEventListener('click', () => {
-                events.emit('order:open');
+    private updateBasket() {
+        this._list.innerHTML = '';
+        this.appData.cart.forEach((item, index) => {
+            const card = new Card(cloneTemplate(this.cardBasketTemplate), {
+                onClick: () => this.appData.removeFromCart(item.id)
             });
-        }
-
-        this.items = [];
-    }
-
-    private ensureElementSafe(selector: string): HTMLElement {
-        const element = this.container.querySelector(selector);
-        return element as HTMLElement || document.createElement('div');
-    }
-
-    private ensureCounterElement(): HTMLElement {
-        let counter = document.querySelector('.header__basket-counter');
-        if (!counter) {
-            counter = document.createElement('div');
-            counter.className = 'header__basket-counter';
-            counter.textContent = '0';
-            document.body.prepend(counter);
-        }
-        return counter as HTMLElement;
-    }
-
-    set items(items: HTMLElement[]) {
-        if (items.length) {
-            this._list.replaceChildren(...items);
-            this.setDisabled(this._button, false);
-        } else {
-            this._list.replaceChildren(createElement('p', {
-                textContent: 'Корзина пуста',
-                className: 'basket__empty'
-            }));
-            this.setDisabled(this._button, true);
-        }
-    }
-
-    set total(total: number) {
-        this.setText(this._total, `${formatNumber(total)} синапсов`);
-        if (this._counter) {
-            this._counter.textContent = total > 0 ? '1' : '0';
-        }
+            
+            card.render({
+                ...item,
+                index: index + 1
+            } as ICard);
+            
+            this._list.appendChild(card.getContainer());
+        });
+        
+        this._total.textContent = `${this.appData.getCartTotal()} синапсов`;
+        this._button.disabled = this.appData.cart.length === 0;
     }
 }

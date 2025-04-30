@@ -1,46 +1,42 @@
-import {Component} from "./base/Component";
-import {IEvents} from "./base/Events";
-import {ensureElement} from "../utils/utils";
+import { AppData } from "./AppData";
+import { Card } from "./Card";
+import { cloneTemplate } from "../utils/utils";
+import { IEvents } from "./base/Events";
+import { Product } from "../types";
 
-interface IPage {
-    counter: number;
-    catalog: HTMLElement[];
-    locked: boolean;
-}
+export class Page {
+    constructor(
+        private appData: AppData,
+        private events: IEvents,
+        private cardCatalogTemplate: HTMLTemplateElement,
+        private appContainer: HTMLElement
+    ) {        
+        // Подписываемся на событие изменения каталога
+        this.events.on('catalog:changed', () => this.renderCatalog());
+    }
 
-export class Page extends Component<IPage> {
-    protected _counter: HTMLElement;
-    protected _catalog: HTMLElement;
-    protected _wrapper: HTMLElement;
-    protected _basket: HTMLElement;
-
-
-    constructor(container: HTMLElement, protected events: IEvents) {
-        super(container);
-
-        this._counter = ensureElement<HTMLElement>('.header__basket-counter');
-        this._catalog = ensureElement<HTMLElement>('.catalog__items');
-        this._wrapper = ensureElement<HTMLElement>('.page__wrapper');
-        this._basket = ensureElement<HTMLElement>('.header__basket');
-
-        this._basket.addEventListener('click', () => {
-            this.events.emit('bids:open');
+    // Делаем метод публичным для обработки событий
+    public renderCatalog() {
+        this.appContainer.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+    
+        this.appData.products.forEach(product => {
+            const card = new Card(cloneTemplate(this.cardCatalogTemplate), {
+                onClick: () => this.events.emit('product:add', product),
+                onPreview: () => this.events.emit('preview:open', product)
+            });
+            
+            card.render({
+                id: product.id,
+                title: product.title,
+                image: product.image,
+                price: product.price,
+                category: product.category
+            });
+            
+            fragment.appendChild(card.getContainer());
         });
-    }
-
-    set counter(value: number) {
-        this.setText(this._counter, String(value));
-    }
-
-    set catalog(items: HTMLElement[]) {
-        this._catalog.replaceChildren(...items);
-    }
-
-    set locked(value: boolean) {
-        if (value) {
-            this._wrapper.classList.add('page__wrapper_locked');
-        } else {
-            this._wrapper.classList.remove('page__wrapper_locked');
-        }
+    
+        this.appContainer.appendChild(fragment);
     }
 }

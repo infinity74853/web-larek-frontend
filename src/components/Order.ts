@@ -1,69 +1,121 @@
 import { Component } from "./base/Component";
-import { ensureElement } from "../utils/utils";
-import { EventEmitter } from "./base/Events";
-import { IOrderForm } from "../types";
+import { IEvents } from "./base/Events";
+import { AppData } from "./AppData";
+import { LarekAPI } from "./LarekAPI";
+import { cloneTemplate } from "../utils/utils";
+import { IOrderData } from "../types";
 
-export class Order extends Component<IOrderForm> {
-    protected _submitButton: HTMLButtonElement;
-    protected _errors: HTMLElement;
+export class Order extends Component<HTMLElement> {
+    protected _form: HTMLFormElement;
     protected _paymentButtons: NodeListOf<HTMLButtonElement>;
     protected _addressInput: HTMLInputElement;
 
-    constructor(container: HTMLFormElement, protected events: EventEmitter) {
+    constructor(
+        container: HTMLElement,
+        protected events: IEvents,
+        private appData: AppData,
+        private api: LarekAPI,
+        private contactsTemplate: HTMLTemplateElement,
+        private successTemplate: HTMLTemplateElement
+    ) {
         super(container);
 
-        this._submitButton = ensureElement<HTMLButtonElement>('button[type=submit]', container);
-        this._errors = ensureElement<HTMLElement>('.form__errors', container);
-        this._paymentButtons = container.querySelectorAll('.button_alt');
-        this._addressInput = ensureElement<HTMLInputElement>('input[name=address]', container);
+        this._form = this.container.querySelector('form[name="order"]');
+        this._paymentButtons = this.container.querySelectorAll('.button_alt');
+        this._addressInput = this.container.querySelector('input[name="address"]');
 
-        this._paymentButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const payment = button.getAttribute('name');
-                this.togglePayment(payment);
-                events.emit('order:payment', { payment });
+        if (!this._form) {
+            console.error('Form structure:', this.container.innerHTML);
+            throw new Error('Форма заказа не найдена. Проверьте структуру шаблона');
+        }
+
+        // Инициализация обработчиков событий
+        this.initializeHandlers();
+    }
+
+    private initializeHandlers() {
+        this._paymentButtons.forEach(button => 
+            button.addEventListener('click', () => this.selectPayment(button))
+        );
+        
+        this._form.addEventListener('input', () => this.validateForm());
+        this._form.addEventListener('submit', (e) => this.handleSubmit(e));
+        
+        this.events.on('order:open', () => this.openOrderForm());
+        this.events.on('order:submit', () => this.openContactsForm());
+        this.events.on('contacts:submit', () => this.submitOrder());
+    }
+
+    // Добавляем отсутствующий метод validateForm
+    private validateForm() {
+        const isValid = this._addressInput.value.trim().length > 0 
+            && this.appData.order?.payment !== '';
+        this.events.emit('order:valid', { valid: isValid });
+    }
+
+    // Остальные методы остаются без изменений
+    private selectPayment(button: HTMLButtonElement) {
+        this._paymentButtons.forEach(btn => btn.classList.remove('button_alt-active'));
+        button.classList.add('button_alt-active');
+        this.appData.updateOrder({ payment: button.name });
+    }
+
+    private handleSubmit(e: Event) {
+        e.preventDefault();
+        this.events.emit('order:submit');
+    }
+
+    private openOrderForm() {
+        this.appData.initOrder();
+        this.events.emit('modal:open', this.container);
+        this.validateForm(); // Вызываем валидацию при открытии формы
+    }
+
+    private openContactsForm() {
+        const contacts = cloneTemplate(this.contactsTemplate);
+        const form = contacts.querySelector('form');
+        const emailInput = contacts.querySelector('#email') as HTMLInputElement;
+        const phoneInput = contacts.querySelector('#phone') as HTMLInputElement;
+        const submitButton = contacts.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+        form.addEventListener('input', () => {
+            this.appData.updateOrder({
+                email: emailInput.value,
+                phone: phoneInput.value
             });
+            submitButton.disabled = !(emailInput.validity.valid && phoneInput.validity.valid);
         });
 
-        this._addressInput.addEventListener('input', () => {
-            events.emit('order:address', { 
-                address: this._addressInput.value 
-            });
-        });
-
-        this._submitButton.addEventListener('click', (e) => {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            events.emit('order:submit');
+            this.events.emit('contacts:submit');
         });
+
+        this.events.emit('modal:open', contacts);
     }
 
-    private togglePayment(payment: string | null) {
-        this._paymentButtons.forEach(button => {
-            button.classList.toggle(
-                'button_alt-active', 
-                button.getAttribute('name') === payment
-            );
+    private async submitOrder() {
+        try {
+            const result = await this.api.createOrder(this.appData.order);
+            if (result.id) {
+                this.showSuccess();
+                this.appData.clearCart();
+            }
+        } catch (error) {
+            console.error('Order error:', error);
+            this.events.emit('order:error', error);
+        }
+    }
+
+    private showSuccess() {
+        const success = cloneTemplate(this.successTemplate);
+        const description = success.querySelector('.order-success__description');
+        description.textContent = `Списано ${this.appData.order.total} синапсов`;
+        
+        success.querySelector('.order-success__close').addEventListener('click', () => {
+            this.events.emit('modal:close');
         });
-    }
-
-    set address(value: string) {
-        this._addressInput.value = value;
-    }
-
-    set payment(value: string) {
-        this.togglePayment(value);
-    }
-
-    set errors(value: string) {
-        this.setText(this._errors, value);
-    }
-
-    set valid(value: boolean) {
-        this.setDisabled(this._submitButton, !value);
-    }
-
-    // Добавляем публичный метод для доступа к container
-    get containerElement(): HTMLElement {
-        return this.container;
+        
+        this.events.emit('modal:open', success);
     }
 }

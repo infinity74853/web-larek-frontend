@@ -13,16 +13,20 @@ export class AppData extends EventEmitter {
     
     constructor(
         previewTemplate: HTMLTemplateElement,
-        protected events: IEvents // Добавляем events в параметры
+        protected events: IEvents
     ) {
         super();
         this._previewTemplate = previewTemplate;        
     }
 
+    get previewTemplate(): HTMLTemplateElement {
+        return this._previewTemplate;
+    }
+
     openProductPreview(product: Product) {
         const card = new Card(cloneTemplate(this._previewTemplate), {
             onClick: (e) => {
-                e.stopPropagation(); // Важно!
+                e.stopPropagation();
                 this.addToCart(product);
             }
         });
@@ -54,7 +58,8 @@ export class AppData extends EventEmitter {
 
     setCatalog(products: Product[]): void {
         this._products = products;
-        this.emit('catalog:changed', { products: this._products });
+        this.emit('catalog:changed');
+        console.log('Каталог обновлен, товаров:', this._products.length);
     }
 
     setPreview(product: Product): void {
@@ -74,7 +79,7 @@ export class AppData extends EventEmitter {
 
     removeFromCart(id: string, event?: Event): void {
         if (event) {
-            event.stopPropagation(); // Останавливаем всплытие
+            event.stopPropagation();
         }
         this._cart = this._cart.filter(item => item.id !== id);
         this.emit('cart:changed', { items: this._cart });

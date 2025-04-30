@@ -22,15 +22,15 @@ export interface IOrderData extends IOrderForm {
 export interface ICartItem extends Product {
     quantity: number;
 }
-
 export interface ICard {
     id: string;
     title: string;
-    price: number | null;
-    category?: Category;
-    description?: string;
+    price: number;
+    category?: string;
     image?: string;
+    description?: string;
     index?: number;
+    isInCart?: boolean;
 }
 
 export const categories = ['софт-скил', 'хард-скил', 'дополнительное', 'кнопка', 'другое'] as const;
