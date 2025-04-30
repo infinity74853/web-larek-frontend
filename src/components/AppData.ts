@@ -1,8 +1,8 @@
-import { EventEmitter } from "./base/events";
+import { EventEmitter } from "./base/Events";
 import { Product, ICartItem, IOrderData } from "../types";
 import { Card } from "./Card";
 import { cloneTemplate } from "../utils/utils";
-import { IEvents } from "./base/events";
+import { IEvents } from "./base/Events";
 
 export class AppData extends EventEmitter {
     private _products: Product[] = [];

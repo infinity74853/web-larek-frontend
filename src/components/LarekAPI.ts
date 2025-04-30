@@ -1,4 +1,4 @@
-import { Api, ApiListResponse } from './base/api';
+import { Api, ApiListResponse } from './base/Api';
 import { Product, IOrderData } from '../types';
 
 export class LarekAPI extends Api {
@@ -10,7 +10,7 @@ export class LarekAPI extends Api {
         const response = await this.get('/product') as ApiListResponse<Product>;
         return response.items.map(item => ({
             ...item,
-            image: item.image ? this.cdnUrl + item.image : undefined
+            image: item.image ? this.cdnUrl + item.image.replace(".svg", ".png") : undefined
         }));
     }
 

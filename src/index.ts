@@ -1,6 +1,6 @@
 import "./scss/styles.scss";
 
-import { EventEmitter } from "./components/base/events";
+import { EventEmitter } from "./components/base/Events";
 import { Modal } from "./components/common/Modal";
 import { Basket } from "./components/common/Basket";
 import { Order } from "./components/Order";
