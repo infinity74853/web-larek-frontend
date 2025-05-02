@@ -36,11 +36,15 @@ export class Basket extends Component<HTMLElement> {
         this._list.innerHTML = '';
         this.appData.cart.forEach((item, index) => {
             const card = new Card(cloneTemplate(this.cardBasketTemplate), {
-                onClick: () => this.appData.removeFromCart(item.id)
+                onClick: () => this.appData.removeFromCart(item.uid)
             });
             
             card.render({
                 ...item,
+                id: item.productId,
+                uid: item.uid,
+                price: item.price,
+                title: item.title,
                 index: index + 1
             } as ICard);
             

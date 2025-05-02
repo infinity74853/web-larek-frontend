@@ -35,14 +35,18 @@ const order = new Order(cloneTemplate(orderTemplate), events, appData, api, cont
 const appContainer = ensureElement('#app-container');
 
 
+events.on('modal:set-data', (product: Product) => {
+    modal.setProductData(product);
+  });
+
 // Подписка на изменение корзины
 events.on('cart:changed', () => {
     basketCounter.textContent = String(appData.cart.length);
 });
 
+// В методе добавления в корзину
 events.on('product:add', (product: Product) => {
     appData.addToCart(product);
-    modal.close();
 });
 
 events.on('preview:open', (product: Product) => {
@@ -63,6 +67,16 @@ basketButton.addEventListener('click', () => events.emit('basket:open'));
 // Клик по корзине
 events.on('basket:open', () => {
     modal.open(basket.render());
+});
+
+// Обработчик удаления из корзины
+events.on('basket:remove', (event: { uid: string }) => {
+    appData.removeFromCart(event.uid);
+});
+
+// Обработчик изменения количества
+events.on('basket:update', (event: { uid: string; quantity: number }) => {
+    appData.updateCartItem(event.uid, event.quantity);
 });
 
 // Загрузка данных

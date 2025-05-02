@@ -1,5 +1,6 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
+import { Product } from "../../types"; // Добавляем импорт типа
 
 export class Modal extends Component<HTMLElement> {
     protected _closeButton: HTMLButtonElement;
@@ -26,6 +27,15 @@ export class Modal extends Component<HTMLElement> {
         this._closeButton.addEventListener('click', this.close.bind(this));
         this.container.addEventListener('click', this.close.bind(this));
         this._content.addEventListener('click', (e: Event) => e.stopPropagation());
+    }
+
+    // Новый метод для установки данных продукта
+    setProductData(product: Product): void {
+        this.setText('.modal__title', product.title);
+        this.setText('.modal__description', product.description || '');
+        // Добавьте другие поля по необходимости, например:
+        // this.setImage('.modal__image', product.image);
+        // this.setText('.modal__price', `${product.price} синапсов`);
     }
 
     set content(value: HTMLElement) {

@@ -1,6 +1,7 @@
 import { Component } from "./base/Component";
 import { ensureElement } from "../utils/utils";
-import { ICard, Category, categoryClasses } from "../types";
+import { ICard, Category } from "../types";
+import { categoryClasses } from "../utils/constants";
 
 interface ICardActions {
     onClick?: (event: MouseEvent) => void;
@@ -64,6 +65,10 @@ export class Card extends Component<ICard> {
     set id(value: string) {
         this.container.dataset.id = value;
     }
+    
+    set uid(value: string) {
+        this.container.dataset.uid = value;
+    }
 
     set index(value: number) {
         this.setText('.basket__item-index', String(value)); // Селектор для номера в корзине
@@ -74,8 +79,8 @@ export class Card extends Component<ICard> {
     }
 
     set description(value: string) {
-        this.setText('.card__text', value); // Селектор для описания
-    }
+        this.setText('.card__description', value); // Добавьте этот метод
+      }
 
     set price(value: number | null) {
         this.setText('.card__price', value ? `${value} синапсов` : 'Бесценно');

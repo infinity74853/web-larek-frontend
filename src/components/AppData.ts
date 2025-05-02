@@ -37,10 +37,6 @@ export class AppData {
         return this._cart;
     }
 
-    isInCart(id: string): boolean {
-        return this._cart.some(item => item.id === id);
-    }
-
     // Обновленный метод установки каталога
     setCatalog(products: Product[]): void {
         this._products = products;
@@ -50,36 +46,36 @@ export class AppData {
     // Метод открытия превью товара
     openProductPreview(product: Product) {
         this.events.emit('preview:changed', product);
+        this.events.emit('modal:set-data', product);
     }
 
     // Методы работы с корзиной
+    private generateUID(): string {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
     addToCart(product: Product): void {
-        const existing = this._cart.find(item => item.id === product.id);
-        if (existing) {
-            existing.quantity++;
-        } else {
-            this._cart.push({ 
-                ...product, 
-                quantity: 1,
-                price: product.price || 0 // Защита от null
-            });
-        }
+        this._cart.push({
+            uid: this.generateUID(),
+            productId: product.id,
+            quantity: 1,
+            price: product.price || 0,
+            title: product.title
+        });
         this.events.emit('cart:changed', this._cart);
         this.events.emit('card:update', { id: product.id });
     }
 
     // Остальные методы
-    removeFromCart(id: string): void {
-        this._cart = this._cart.filter(item => item.id !== id);
-        this.events.emit('cart:changed', this._cart);
-        this.events.emit('card:update', { id: id });
-    }
-
-    clearCart(): void {
-        this._cart = [];
+    removeFromCart(uid: string): void {
+        this._cart = this._cart.filter(item => item.uid !== uid);
         this.events.emit('cart:changed', this._cart);
     }
 
+    isInCart(id: string): boolean {
+        return this._cart.some(item => item.productId === id);
+    }
+    
     getCartTotal(): number {
         return this._cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }
@@ -90,10 +86,24 @@ export class AppData {
             address: '',
             email: '',
             phone: '',
-            items: this._cart.map(item => item.id),
+            items: this._cart.map(item => item.uid), // Теперь храним uid позиций
             total: this.getCartTotal()
         };
         this.events.emit('order:init', this._order);
+    }
+
+    // Добавим метод обновления количества
+    updateCartItem(uid: string, quantity: number): void {
+        const item = this._cart.find(i => i.uid === uid);
+        if (item) {
+            item.quantity = Math.max(1, quantity);
+            this.events.emit('cart:changed', this._cart);
+        }
+    }
+
+    clearCart(): void {
+        this._cart = [];
+        this.events.emit('cart:changed', this._cart);
     }
 
     updateOrder(data: Partial<IOrderData>): void {
