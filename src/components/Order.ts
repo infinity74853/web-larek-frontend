@@ -20,16 +20,23 @@ export class Order extends Component<HTMLElement> {
     ) {
         super(container);
 
-        this._form = this.container.querySelector('form[name="order"]');
+        // Проверка элементов с понятными ошибками
         this._paymentButtons = this.container.querySelectorAll('.button_alt');
-        this._addressInput = this.container.querySelector('input[name="address"]');
-
-        if (!this._form) {
-            console.error('Form structure:', this.container.innerHTML);
-            throw new Error('Форма заказа не найдена. Проверьте структуру шаблона');
+        if (!this._paymentButtons.length) {
+            throw new Error('Payment buttons not found in Order template');
         }
 
-        // Инициализация обработчиков событий
+        this._addressInput = this.container.querySelector('.form__input');
+        if (!this._addressInput) {
+            throw new Error('Address input not found in Order template');
+        }
+
+        this._form = this.container.querySelector('form');
+        if (!this._form) {
+            throw new Error('Form not found in Order template');
+        }
+
+        // Инициализация обработчиков
         this.initializeHandlers();
     }
 
@@ -46,10 +53,14 @@ export class Order extends Component<HTMLElement> {
         this.events.on('contacts:submit', () => this.submitOrder());
     }
 
-    // Добавляем отсутствующий метод validateForm
     private validateForm() {
-        const isValid = this._addressInput.value.trim().length > 0 
-            && this.appData.order?.payment !== '';
+        if (!this.appData.order) {
+            console.error('Order data not initialized');
+            return;
+        }
+        
+        const isValid = this._addressInput.value.trim().length > 0 && 
+                      this.appData.order.payment !== '';
         this.events.emit('order:valid', { valid: isValid });
     }
 
@@ -95,6 +106,11 @@ export class Order extends Component<HTMLElement> {
     }
 
     private async submitOrder() {
+        if (!this.appData.order) {
+            console.error('Cannot submit empty order');
+            return;
+        }
+
         try {
             const result = await this.api.createOrder(this.appData.order);
             if (result.id) {
@@ -102,12 +118,13 @@ export class Order extends Component<HTMLElement> {
                 this.appData.clearCart();
             }
         } catch (error) {
-            console.error('Order error:', error);
-            this.events.emit('order:error', error);
+            console.error('Order submission error:', error);
         }
     }
 
     private showSuccess() {
+        if (!this.appData.order) return;
+
         const success = cloneTemplate(this.successTemplate);
         const description = success.querySelector('.order-success__description');
         description.textContent = `Списано ${this.appData.order.total} синапсов`;

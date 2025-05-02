@@ -22,24 +22,39 @@ export interface IOrderData extends IOrderForm {
 export interface ICartItem extends Product {
     quantity: number;
 }
+
 export interface ICard {
     id: string;
     title: string;
-    price: number;
-    category?: string;
-    image?: string;
+    price: number | null;
+    category?: Category;
     description?: string;
+    image?: string;
     index?: number;
-    isInCart?: boolean;
 }
 
-export const categories = ['софт-скил', 'хард-скил', 'дополнительное', 'кнопка', 'другое'] as const;
-export type Category = typeof categories[number];
+export type Category = 
+  'софт-скил' | 
+  'хард-скил' | 
+  'дополнительное' | 
+  'кнопка' | 
+  'другое';
 
 export const categoryClasses: Record<Category, string> = {
-    'софт-скил': 'soft',
-    'хард-скил': 'hard',
-    'дополнительное': 'additional',
-    'кнопка': 'button',
-    'другое': 'other'
+  'софт-скил': 'soft',
+  'хард-скил': 'hard',
+  'дополнительное': 'additional',
+  'кнопка': 'button',
+  'другое': 'other'
 };
+
+// export const categories = ['софт-скил', 'хард-скил', 'дополнительное', 'кнопка', 'другое'] as const;
+// export type Category = typeof categories[number];
+
+// export const categoryClasses: Record<Category, string> = {
+//     'софт-скил': 'soft',
+//     'хард-скил': 'hard',
+//     'дополнительное': 'additional',
+//     'кнопка': 'button',
+//     'другое': 'other'
+// };

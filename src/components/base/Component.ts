@@ -18,9 +18,10 @@ export abstract class Component<T> {
     }
 
     // Установить текстовое содержимое
-    protected setText(element: HTMLElement, value: unknown) {
+    protected setText(selector: string, value: string) {
+        const element = this.container.querySelector(selector);
         if (element) {
-            element.textContent = String(value);
+            element.textContent = value;
         }
     }
 

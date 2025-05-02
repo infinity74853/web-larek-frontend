@@ -13,9 +13,7 @@ export class Card extends Component<ICard> {
     protected _price: HTMLElement;
     protected _category?: HTMLElement;
     protected _button?: HTMLButtonElement;
-    protected _index?: HTMLElement;
-    protected _description?: HTMLElement;
-    protected _deleteButton?: HTMLButtonElement;
+    protected _inCart = false;
 
     constructor(container: HTMLElement, actions?: ICardActions) {
         super(container);
@@ -25,94 +23,100 @@ export class Card extends Component<ICard> {
         this._image = container.querySelector('.card__image');
         this._category = container.querySelector('.card__category');
         this._button = container.querySelector('.card__button');
-        this._index = container.querySelector('.basket__item-index');
-        this._description = container.querySelector('.card__description');
-        this._deleteButton = container.querySelector('.basket__item-delete');
-        
-        if (actions?.onClick && this._button) {
-            this._button.addEventListener('click', (e) => {
+
+        if (actions?.onClick) {
+            this._button?.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation(); // Предотвращаем всплытие
-                actions.onClick!(e);
+                actions.onClick(e);
             });
         }
 
         if (actions?.onPreview) {
             container.addEventListener('click', (e) => {
-                if (!(e.target as Element).closest('.card__button') && 
-                    !(e.target as Element).closest('.basket__item-delete')) {
-                    e.preventDefault();
-                    actions.onPreview!();
+                if (e.target !== this._button) {
+                    actions.onPreview();
                 }
             });
         }
+    }
 
-        if (this._button && this._price.textContent === 'Бесценно' 
-            && !this._button.classList.contains('basket__item-delete')) {
-            this._button.disabled = true;
-            this._button.textContent = 'Не продается';
-            this._button.classList.add('disabled');
+    set inCart(value: boolean) {
+        if (typeof value !== 'boolean') {
+            console.error('[Card] Invalid inCart value:', value);
+            this._inCart = false;
+        } else {
+            this._inCart = value;
         }
+        this.updateButtonState();
+    }
 
-        if (this._deleteButton) {
-            this._deleteButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();  // Важно: останавливаем всплытие
-                actions?.onClick?.(e);  // Вызываем обработчик
-            });
+    private updateButtonState() {
+        if (!this._button) {
+            return;
         }
+    
+        this._button.disabled = this._inCart;
+        this._button.textContent = this._inCart 
+            ? 'Уже в корзине' 
+            : (this._price === null ? 'Не продаётся' : 'Купить');        
     }
 
     set id(value: string) {
         this.container.dataset.id = value;
     }
 
+    set index(value: number) {
+        this.setText('.basket__item-index', String(value)); // Селектор для номера в корзине
+    }
+
     set title(value: string) {
-        this.setText(this._title, value);
+        this.setText('.card__title', value); // Селектор вместо элемента
+    }
+
+    set description(value: string) {
+        this.setText('.card__text', value); // Селектор для описания
     }
 
     set price(value: number | null) {
-        this.setText(this._price, value ? `${value} синапсов` : 'Бесценно');
-        
-        if (this._button && !this._button.classList.contains('basket__item-delete')) {
-            const isDisabled = value === null;
-            this._button.disabled = isDisabled;
-            this._button.textContent = isDisabled ? 'Не продается' : 'В корзину'; // Изменено здесь
-            this._button.classList.toggle('disabled', isDisabled);
+        this.setText('.card__price', value ? `${value} синапсов` : 'Бесценно');
+        this.updateButtonState();
+    
+        if (this._button) {
+        // Проверяем, не является ли кнопка элементом корзины
+        const isBasketButton = this._button.classList.contains('basket__item-delete');
+      
+        if (!isBasketButton) {
+            this._button.disabled = value === null;
+            this._button.textContent = value === null ? 'Не продаётся' : 'Добавить в корзину';
+            } else {
+            // Для кнопок корзины оставляем иконку вместо текста
+            this._button.textContent = '';
+            }
         }
     }
 
     set category(value: Category | undefined) {
-        if (this._category) {
-            this.setText(this._category, value || '');
-            if (value) {
-                this._category.className = 'card__category';
-                this._category.classList.add(`card__category_${categoryClasses[value]}`);
+        if (this._category && value) {
+            this.setText('.card__category', value);
+            const classKey = categoryClasses[value];
+            if (classKey) {
+            this._category.className = `card__category card__category_${classKey}`;
             }
         }
     }
 
     set image(value: string | undefined) {
-        if (this._image) {
-            this._image.src = value || '';
+        if (this._image && value) {
+            this._image.src = value;
             this._image.alt = this._title.textContent || '';
         }
     }
 
-    set index(value: number | undefined) {
-        if (this._index) {
-            this.setText(this._index, value?.toString() || '');
-        }
+    set quantity(value: number) {
+        this.setText('.basket__item-counter', `× ${value}`); // Селектор для количества
     }
 
-    // Добавляем публичный геттер для container
     get containerElement(): HTMLElement {
         return this.container;
-    }
-
-    set description(value: string | undefined) {
-        if (this._description) {
-            this.setText(this._description, value || '');
-        }
     }
 }

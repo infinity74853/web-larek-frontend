@@ -5,38 +5,54 @@ import { IEvents } from "./base/Events";
 import { Product } from "../types";
 
 export class Page {
+    private cards: Map<string, Card>; // Хранилище карточек
+
     constructor(
         private appData: AppData,
         private events: IEvents,
         private cardCatalogTemplate: HTMLTemplateElement,
         private appContainer: HTMLElement
     ) {        
-        // Подписываемся на событие изменения каталога
+        this.cards = new Map<string, Card>();
         this.events.on('catalog:changed', () => this.renderCatalog());
+        this.events.on<{ id: string }>('card:update', (data) => this.updateCard(data.id));
     }
 
-    // Делаем метод публичным для обработки событий
     public renderCatalog() {
+        this.cards.clear(); // Очищаем предыдущие карточки
         this.appContainer.innerHTML = '';
         const fragment = document.createDocumentFragment();
-    
+        
         this.appData.products.forEach(product => {
             const card = new Card(cloneTemplate(this.cardCatalogTemplate), {
                 onClick: () => this.events.emit('product:add', product),
                 onPreview: () => this.events.emit('preview:open', product)
             });
             
-            card.render({
-                id: product.id,
-                title: product.title,
-                image: product.image,
-                price: product.price,
-                category: product.category
-            });
+            // Инициализируем состояние кнопки
+            card.inCart = this.appData.isInCart(product.id);
             
-            fragment.appendChild(card.getContainer());
+            // Устанавливаем свойства карточки
+            card.id = product.id;
+            card.title = product.title;
+            card.price = product.price;
+            card.category = product.category;
+            card.image = product.image;
+            card.description = product.description;
+
+            // Сохраняем карточку в хранилище
+            this.cards.set(product.id, card);
+            
+            fragment.appendChild(card.containerElement);
         });
-    
+        
         this.appContainer.appendChild(fragment);
+    }
+
+    private updateCard(id: string) {
+        const card = this.cards.get(id);
+        if (card) {
+            card.inCart = this.appData.isInCart(id);
+        }
     }
 }

@@ -26,49 +26,19 @@ const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 // Инициализация компонентов
 const events = new EventEmitter();
+const modal = new Modal(ensureElement('#modal-container'), events);
 const appData = new AppData(cardPreviewTemplate, events);
 const page = new Page(appData, events, cardCatalogTemplate, ensureElement('#app-container'));
-const modal = new Modal(ensureElement('#modal-container'), events);
 const basket = new Basket(cloneTemplate(basketTemplate), events, appData, cardBasketTemplate);
-const order = new Order(cloneTemplate(orderTemplate), events, appData, api, contactsTemplate, successTemplate);
-
-// Временный тест для проверки
-setTimeout(() => {
-    console.log('Test products:', appData.products);
-    page.renderCatalog();
-}, 2000);
-
-// DOM элементы
-const appContainer = ensureElement('#app-container');
 const basketCounter = ensureElement('.header__basket-counter');
+const order = new Order(cloneTemplate(orderTemplate), events, appData, api, contactsTemplate, successTemplate);
+const appContainer = ensureElement('#app-container');
 
-// Инициализация основных компонентов
-new Page(
-    appData,
-    events,
-    cardCatalogTemplate,
-    appContainer
-);
 
-new Basket(
-    cloneTemplate(basketTemplate),
-    events,
-    appData,
-    cardBasketTemplate
-);
-
-new Order(
-    cloneTemplate(orderTemplate),
-    events,
-    appData,
-    api,
-    contactsTemplate,
-    successTemplate
-);
-
-// Инициализация корзины
-const basketButton = ensureElement('.header__basket');
-basketButton.addEventListener('click', () => events.emit('basket:open'));
+// Подписка на изменение корзины
+events.on('cart:changed', () => {
+    basketCounter.textContent = String(appData.cart.length);
+});
 
 events.on('product:add', (product: Product) => {
     appData.addToCart(product);
@@ -77,27 +47,20 @@ events.on('product:add', (product: Product) => {
 
 events.on('preview:open', (product: Product) => {
     const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
-        onClick: () => appData.addToCart(product)
+        onClick: () => {
+            appData.addToCart(product);
+            modal.close();
+        }
     });
     previewCard.render(product);
-    modal.open(previewCard.getContainer());
+    modal.open(previewCard.containerElement);
 });
 
-events.on('preview:open', (product: Product) => {
-    const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
-        onClick: () => appData.addToCart(product)
-    });
-    previewCard.render(product);
-    modal.open();
-});
+// Инициализация корзины
+const basketButton = ensureElement('.header__basket');
+basketButton.addEventListener('click', () => events.emit('basket:open'));
 
 // Клик по корзине
-basketButton.addEventListener('click', () => {
-    console.log('Basket button clicked');
-    events.emit('basket:open');
-});
-
-// Модалки
 events.on('basket:open', () => {
     modal.open(basket.render());
 });

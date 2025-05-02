@@ -1,45 +1,34 @@
-import { EventEmitter } from "./base/Events";
+//import { EventEmitter } from "./base/Events";
 import { Product, ICartItem, IOrderData } from "../types";
-import { Card } from "./Card";
 import { cloneTemplate } from "../utils/utils";
 import { IEvents } from "./base/Events";
 
-export class AppData extends EventEmitter {
+export class AppData {
     private _products: Product[] = [];
     private _cart: ICartItem[] = [];
     private _order: IOrderData | null = null;
-    private _preview: Product | null = null;
     private _previewTemplate: HTMLTemplateElement;
     
     constructor(
         previewTemplate: HTMLTemplateElement,
         protected events: IEvents
     ) {
-        super();
-        this._previewTemplate = previewTemplate;        
+        this._previewTemplate = previewTemplate;
+        
+        // Автоматическая подписка на события
+        events.on('preview:open', (product: Product) => this.openProductPreview(product));
     }
 
+    get order(): IOrderData | null {
+        return this._order;
+    }
+
+    // Геттер для шаблона превью
     get previewTemplate(): HTMLTemplateElement {
         return this._previewTemplate;
     }
 
-    openProductPreview(product: Product) {
-        const card = new Card(cloneTemplate(this._previewTemplate), {
-            onClick: (e) => {
-                e.stopPropagation();
-                this.addToCart(product);
-            }
-        });
-        
-        // Чистая событийная модель
-        this.events.emit('preview:open', {
-            content: card.render({
-                /* данные */
-            })
-        });
-    }
-
-    // Остальные методы без изменений
+    // Основные геттеры
     get products(): Product[] {
         return this._products;
     }
@@ -48,50 +37,51 @@ export class AppData extends EventEmitter {
         return this._cart;
     }
 
-    get order(): IOrderData | null {
-        return this._order;
+    isInCart(id: string): boolean {
+        return this._cart.some(item => item.id === id);
     }
 
-    get preview(): Product | null {
-        return this._preview;
-    }
-
+    // Обновленный метод установки каталога
     setCatalog(products: Product[]): void {
         this._products = products;
-        this.emit('catalog:changed');
-        console.log('Каталог обновлен, товаров:', this._products.length);
+        this.events.emit('catalog:changed', this._products); // Явная передача данных
     }
 
-    setPreview(product: Product): void {
-        this._preview = product;
-        this.emit('preview:changed', { product: this._preview });
+    // Метод открытия превью товара
+    openProductPreview(product: Product) {
+        this.events.emit('preview:changed', product);
     }
 
+    // Методы работы с корзиной
     addToCart(product: Product): void {
         const existing = this._cart.find(item => item.id === product.id);
         if (existing) {
             existing.quantity++;
         } else {
-            this._cart.push({ ...product, quantity: 1 });
+            this._cart.push({ 
+                ...product, 
+                quantity: 1,
+                price: product.price || 0 // Защита от null
+            });
         }
-        this.emit('cart:changed', { items: this._cart });
+        this.events.emit('cart:changed', this._cart);
+        this.events.emit('card:update', { id: product.id });
     }
 
-    removeFromCart(id: string, event?: Event): void {
-        if (event) {
-            event.stopPropagation();
-        }
+    // Остальные методы
+    removeFromCart(id: string): void {
         this._cart = this._cart.filter(item => item.id !== id);
-        this.emit('cart:changed', { items: this._cart });
+        this.events.emit('cart:changed', this._cart);
+        this.events.emit('card:update', { id: id });
     }
 
     clearCart(): void {
         this._cart = [];
-        this.emit('cart:changed', { items: this._cart });
+        this.events.emit('cart:changed', this._cart);
     }
 
     getCartTotal(): number {
-        return this._cart.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+        return this._cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }
 
     initOrder(): void {
@@ -103,13 +93,13 @@ export class AppData extends EventEmitter {
             items: this._cart.map(item => item.id),
             total: this.getCartTotal()
         };
-        this.emit('order:init', { order: this._order });
+        this.events.emit('order:init', this._order);
     }
 
     updateOrder(data: Partial<IOrderData>): void {
         if (this._order) {
             this._order = { ...this._order, ...data };
-            this.emit('order:changed', { order: this._order });
+            this.events.emit('order:changed', this._order);
         }
     }
 }

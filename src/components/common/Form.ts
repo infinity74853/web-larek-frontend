@@ -38,11 +38,11 @@ export class Form<T> extends Component<IFormState> {
     }
 
     set valid(value: boolean) {
-        this._submit.disabled = !value;
+        this.setDisabled(this.container.querySelector('button'), !value);
     }
 
     set errors(value: string) {
-        this.setText(this._errors, value);
+        this.setText('.form__errors', value); // Селектор для блока ошибок
     }
 
     render(state: Partial<T> & IFormState) {
