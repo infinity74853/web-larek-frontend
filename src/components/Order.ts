@@ -11,22 +11,28 @@ export class Order extends Component<HTMLFormElement> {
         protected events: IEvents
     ) {
         super(container);
-        
-        // Добавьте проверку на существование элементов
+
         this._paymentButtons = Array.from(container.querySelectorAll('button[name]'));
         this._addressInput = container.querySelector('[name="address"]') as HTMLInputElement;
         this._submitButton = container.querySelector('button[type="submit"]') as HTMLButtonElement;
 
-        if (!this._addressInput || !this._submitButton) {
-            throw new Error('Required form elements not found');
-        }
+        // Добавляем обработчики
+        this._paymentButtons.forEach(button => 
+            button.addEventListener('click', (e) => this.handlePaymentChange(e))
+        );
+        
+        // Важно: обработчик должен быть на форме, а не на кнопке
+        this.container.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSubmit();
+        });
+
+        this._addressInput.addEventListener('input', () => this.updateForm());
     }
 
     private handlePaymentChange(e: Event) {
         const button = e.target as HTMLButtonElement;
-        this._paymentButtons.forEach(b => 
-            b.classList.remove('button_alt-active')
-        );
+        this._paymentButtons.forEach(b =>b.classList.remove('button_alt-active'));
         button.classList.add('button_alt-active');
         this.updateForm();
     }
@@ -36,7 +42,10 @@ export class Order extends Component<HTMLFormElement> {
     }
 
     private get isValid(): boolean {
-        return !!this.selectedPayment && this._addressInput.value.length > 5;
+        const isPaymentSelected = !!this.selectedPayment;
+        const isAddressValid = this._addressInput.value.trim().length >= 6;
+        console.log(`Validation: payment=${isPaymentSelected}, address=${isAddressValid}`);
+        return isPaymentSelected && isAddressValid;
     }
 
     private get selectedPayment(): string | null {
@@ -46,7 +55,20 @@ export class Order extends Component<HTMLFormElement> {
         return activeButton?.name || null;
     }
 
+    // Добавим метод для установки адреса
+    set address(value: string) {
+        this._addressInput.value = value;
+    }
+
+    // Добавим метод для сброса состояния платежных кнопок
+    resetPayment() {
+        this._paymentButtons.forEach(b => 
+            b.classList.remove('button_alt-active')
+        );
+    }
+
     private handleSubmit() {
+        console.log('Submit handled', this.isValid, this.selectedPayment, this._addressInput.value);
         if (this.isValid) {
             this.events.emit('order:submit', {
                 payment: this.selectedPayment,

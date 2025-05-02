@@ -12,6 +12,7 @@ import { Product, IOrderForm, IContactsForm } from "./types";
 import { Contacts } from "./components/Contacts";
 import { API_URL, CDN_URL } from "./utils/constants";
 import { ensureElement, cloneTemplate } from "./utils/utils";
+import { Success } from './components/common/Success';
 
 // Инициализация API
 const api = new LarekAPI(API_URL, CDN_URL);
@@ -37,10 +38,11 @@ const appData = new AppData(cardPreviewTemplate, events);
 const page = new Page(appData, events, cardCatalogTemplate, ensureElement('#app-container'));
 const basket = new Basket(cloneTemplate(basketTemplate), events, appData, cardBasketTemplate);
 const basketCounter = ensureElement('.header__basket-counter');
-const order = new Order(cloneTemplate(orderTemplate),events);
 const appContainer = ensureElement('#app-container');
-
 const contacts = new Contacts(cloneTemplate(contactsTemplate), events);
+const orderComponent = new Order(cloneTemplate(orderTemplate), events);
+const contactsForm = cloneTemplate(contactsTemplate) as HTMLFormElement;
+const contactsComponent = new Contacts(contactsForm, events);
 
 events.on('modal:set-data', (product: Product) => {
     modal.setProductData(product);
@@ -89,30 +91,63 @@ events.on('basket:update', (event: { id: string; quantity: number }) => {
 // Добавляем обработчики
 events.on('order:start', () => {
     appData.initOrder();
-    order.render(); // Предполагая что order уже инициализирован
-    modal.open();
+    orderComponent.resetPayment();
+    orderComponent.address = '';
+    
+    const modalContent = document.querySelector('#modal-container .modal__content');
+    if (modalContent) {
+        modalContent.innerHTML = '';
+        modalContent.appendChild(orderComponent.getContainer()); // Используем метод
+        events.emit('modal:open');
+    }
 });
 
 events.on('order:submit', (data: IOrderForm) => {
+    console.log('Order form submitted:', data);
     appData.updateOrder(data);
     events.emit('contacts:open');
 });
 
 events.on('contacts:submit', (data: IContactsForm) => {
     appData.updateOrder(data);
-    api.postOrder(appData.order)
-        .then(() => {
-            modal.renderSuccess(appData.getCartTotal());
-            appData.clearCart();
-        })
-        .catch(console.error);
+    events.emit('order:complete');
 });
 
-events.on('order:finalize', () => {
-    api.postOrder(appData.order)
-        .then(() => {
-            modal.renderSuccess(appData.getCartTotal());
-            appData.clearCart();
-        })
-        .catch(console.error);
+events.on('contacts:open', () => {
+    const modalContent = document.querySelector('#modal-container .modal__content');
+    if (modalContent && contactsComponent) {
+        modalContent.innerHTML = '';
+        modalContent.appendChild(contactsComponent.getContainer());
+        events.emit('modal:open');
+    }
+});
+
+events.on('order:complete', () => {
+    // Очищаем корзину ПЕРЕД показом успешного сообщения
+    appData.clearCart();
+    
+    const successTemplate = document.getElementById('success') as HTMLTemplateElement;
+    const successComponent = new Success(cloneTemplate(successTemplate), {
+        onClick: () => {
+            events.emit('modal:close');
+            events.emit('cart:changed'); // Обновляем корзину
+        }
+    });
+
+    const modalContent = document.querySelector('#modal-container .modal__content');
+    if (modalContent) {
+        modalContent.innerHTML = '';
+        modalContent.appendChild(successComponent.getContainer());
+        events.emit('modal:open');
+    }
+});
+
+// Добавить обработчик закрытия модалки
+events.on('modal:close', () => {
+    events.emit('cart:changed');
+    const modalContainer = document.getElementById('modal-container');
+    if (modalContainer) {
+        modalContainer.classList.remove('modal_active');
+    }
+    document.body.classList.remove('no-scroll');
 });

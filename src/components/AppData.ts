@@ -90,6 +90,7 @@ export class AppData {
             total: this.getCartTotal()
         };
         this.events.emit('order:init', this._order);
+        this.events.emit('modal:open'); // Добавляем открытие модального окна
     }
 
     // Добавим метод обновления количества

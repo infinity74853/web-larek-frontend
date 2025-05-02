@@ -43,11 +43,14 @@ export class Contacts extends Component<HTMLFormElement> {
     }
 
     private handleSubmit() {
+        console.log('[Contacts] Submit attempt', this.isValid);
         if (this.isValid) {
             this.events.emit('contacts:submit', {
                 email: this._emailInput.value,
                 phone: this._phoneInput.value
-            } as IContactsForm);
+            });
+            // Добавим переход к подтверждению
+            this.events.emit('order:complete'); // <-- Добавить эту строку
         }
     }
 }

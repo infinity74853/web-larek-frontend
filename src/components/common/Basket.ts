@@ -29,7 +29,9 @@ export class Basket extends Component<HTMLElement> {
         this._button = this.container.querySelector('.basket__button');
         
         this.events.on('cart:changed', () => this.updateBasket());
-        this._button.addEventListener('click', () => this.events.emit('order:open'));
+        this._button.addEventListener('click', () => {
+            this.events.emit('order:start');            
+        });
     }
 
     private updateBasket() {
