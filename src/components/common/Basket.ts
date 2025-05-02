@@ -6,6 +6,7 @@ import { IEvents } from "../base/Events";
 import { ICard } from "../../types";
 
 export class Basket extends Component<HTMLElement> {
+    protected _title: HTMLElement;
     protected _list: HTMLElement;
     protected _total: HTMLElement;
     protected _button: HTMLButtonElement;
@@ -17,10 +18,12 @@ export class Basket extends Component<HTMLElement> {
         private cardBasketTemplate: HTMLTemplateElement
     ) {
         super(container);
+        this._title = this.container.querySelector('.modal__title');
         this._list = this.container.querySelector('.basket__list');
         this._total = this.container.querySelector('.basket__price');
         this._button = this.container.querySelector('.basket__button');
         this.initialize();
+        this.updateBasket();
     }
 
     private initialize() {
@@ -35,6 +38,7 @@ export class Basket extends Component<HTMLElement> {
     }
 
     private updateBasket() {
+        this._title.textContent = 'Корзина';
         this._list.innerHTML = '';
         this.appData.cart.forEach((item, index) => {
             const card = new Card(cloneTemplate(this.cardBasketTemplate), {

@@ -99,7 +99,7 @@
 				<form class="form">
 					<div class="order">
 						<div class="order__field">
-							<h2 class="modal__title">Способ оплаты</h2>
+							<h2 class="order__title modal__title">Способ оплаты</h2>
 							<div class="order__buttons">
 								<button type="button" class="button button_alt">Онлайн</button>
 								<button type="button" class="button button_alt">При получении</button>
@@ -189,7 +189,7 @@
 	<template id="card-basket">
 		<li class="basket__item card card_compact">
 			<span class="basket__item-index">1</span>
-			<span class="card__title">Фреймворк куки судьбы</span>
+			<span class="card__title basket__item-title">Фреймворк куки судьбы</span>
 			<span class="card__price">2500 синапсов</span>
 			<button class="basket__item-delete card__button" aria-label="удалить"></button>
 		</li>
@@ -197,7 +197,7 @@
 
 	<template id="basket">
 		<div class="basket">
-			<h2 class="modal__title">Корзина</h2>
+			<h2 class="basket__title modal__title">Корзина</h2>
 			<ul class="basket__list"></ul>
 			<div class="modal__actions">
 				<button class="button basket__button">Оформить</button>
@@ -210,11 +210,12 @@
 		<form class="form" name="order">
 		  <div class="order">
 			<div class="order__field">
-			  <h2 class="modal__title">Способ оплаты</h2>
+			  <h2 class="order__title modal__title">Способ оплаты</h2>
 			  <div class="order__buttons">
 				<button name="card" type="button" class="button button_alt">Онлайн</button>
 				<button name="cash" type="button" class="button button_alt">При получении</button>
 			  </div>
+			  <span class="form__error payment-error"></span>
 			</div>
 			<label class="order__field">
 			  <span class="form__label modal__title">Адрес доставки</span>
@@ -226,10 +227,12 @@
 				minlength="6"
 				required
 			  >
+			  <span class="form__error address-error"></span>
 			</label>
 		  </div>
 		  <div class="modal__actions">
 			<button type="submit" class="button order__button" disabled>Далее</button>
+			<span class="form__error submit-error"></span>
 		  </div>
 		</form>
 	</template>
@@ -240,15 +243,17 @@
 				<label class="order__field">
 					<span class="form__label modal__title">Email</span>
 					<input name="email" class="form__input" type="text" placeholder="Введите Email" />
+					<span class="form__error email-error"></span>
 				</label>
 				<label class="order__field">
 					<span class="form__label modal__title">Телефон</span>
 					<input name="phone" class="form__input" type="text" placeholder="+7 (" />
+					<span class="form__error phone-error"></span>
 				</label>
 			</div>
 			<div class="modal__actions">
 				<button type="submit" disabled class="button">Оплатить</button>
-				<span class="form__errors"></span>
+				<span class="form__errors submit-error"></span>
 			</div>
 		</form>
 	</template>

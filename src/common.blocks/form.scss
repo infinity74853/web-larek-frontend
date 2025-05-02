@@ -35,3 +35,45 @@
     }
   }
 }
+
+.form__error {
+  color: #ff6969;
+  font-size: 28px;
+  margin-top: 5px;
+  display: none;
+}
+
+.form__errors.submit-error {
+  color: #ff6969;
+  font-size: 28px;
+  
+}
+
+.form__input_invalid {
+  border-color: #ffffff;
+  box-shadow: 0 0 3px rgba(255, 0, 0, 0.3);
+}
+
+@media (max-width: 480px) {
+  .modal__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form__error.submit-error.form__errors {
+    text-align: center;
+    order: -1;
+  }
+}
+
+.form__error.form__errors {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.form__error:not(:empty) {
+  opacity: 1;
+}
+
+.form__error:empty {
+  opacity: 0;
+}
