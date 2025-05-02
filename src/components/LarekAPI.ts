@@ -17,4 +17,8 @@ export class LarekAPI extends Api {
     async createOrder(order: IOrderData): Promise<{ id: string }> {
         return this.post('/order', order) as Promise<{ id: string }>;
     }
+
+    postOrder(order: IOrderData): Promise<void> {
+        return this.post('/order', order).then(() => { /* преобразуем в void */ });
+    }
 }

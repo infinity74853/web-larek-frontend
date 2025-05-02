@@ -36,17 +36,15 @@ export class Basket extends Component<HTMLElement> {
         this._list.innerHTML = '';
         this.appData.cart.forEach((item, index) => {
             const card = new Card(cloneTemplate(this.cardBasketTemplate), {
-                onClick: () => this.appData.removeFromCart(item.uid)
+                onClick: () => this.appData.removeFromCart(item.id)
             });
             
             card.render({
-                ...item,
-                id: item.productId,
-                uid: item.uid,
-                price: item.price,
+                id: item.id,
                 title: item.title,
+                price: item.price,
                 index: index + 1
-            } as ICard);
+            });
             
             this._list.appendChild(card.getContainer());
         });

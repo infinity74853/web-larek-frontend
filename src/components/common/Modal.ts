@@ -1,19 +1,22 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
-import { Product } from "../../types"; // Добавляем импорт типа
+import { Product } from "../../types";
+import { cloneTemplate } from "../../utils/utils";
 
 export class Modal extends Component<HTMLElement> {
     protected _closeButton: HTMLButtonElement;
     protected _content: HTMLElement;
     protected _isOpened = false;
+    protected successTemplate: HTMLTemplateElement;
     private _handleKeyDown: (event: KeyboardEvent) => void;
 
     constructor(
         container: HTMLElement,
-        protected events: IEvents
+        protected events: IEvents,
+        successTemplate: HTMLTemplateElement
     ) {
         super(container);
-        
+        this.successTemplate = successTemplate;
         this._closeButton = this.container.querySelector('.modal__close');
         this._content = this.container.querySelector('.modal__content');
 
@@ -59,5 +62,12 @@ export class Modal extends Component<HTMLElement> {
 
     get isOpened(): boolean {
         return this._isOpened;
+    }
+
+    renderSuccess(total: number) {
+        const successTemplate = cloneTemplate(this.successTemplate);
+        this.setText('.order-success__description', `Списано ${total} синапсов`);
+        this.content = successTemplate;
+        this.open();
     }
 }

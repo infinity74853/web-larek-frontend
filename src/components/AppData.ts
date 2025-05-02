@@ -56,7 +56,7 @@ export class AppData {
 
     addToCart(product: Product): void {
         this._cart.push({
-            uid: this.generateUID(),
+            id: this.generateUID(),
             productId: product.id,
             quantity: 1,
             price: product.price || 0,
@@ -67,8 +67,8 @@ export class AppData {
     }
 
     // Остальные методы
-    removeFromCart(uid: string): void {
-        this._cart = this._cart.filter(item => item.uid !== uid);
+    removeFromCart(id: string): void {
+        this._cart = this._cart.filter(item => item.id !== id);
         this.events.emit('cart:changed', this._cart);
     }
 
@@ -86,15 +86,15 @@ export class AppData {
             address: '',
             email: '',
             phone: '',
-            items: this._cart.map(item => item.uid), // Теперь храним uid позиций
+            items: this._cart.map(item => item.id),
             total: this.getCartTotal()
         };
         this.events.emit('order:init', this._order);
     }
 
     // Добавим метод обновления количества
-    updateCartItem(uid: string, quantity: number): void {
-        const item = this._cart.find(i => i.uid === uid);
+    updateCartItem(id: string, quantity: number): void {
+        const item = this._cart.find(i => i.id === id);
         if (item) {
             item.quantity = Math.max(1, quantity);
             this.events.emit('cart:changed', this._cart);

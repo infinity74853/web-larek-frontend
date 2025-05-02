@@ -15,7 +15,10 @@ export class Page {
     ) {        
         this.cards = new Map<string, Card>();
         this.events.on('catalog:changed', () => this.renderCatalog());
-        this.events.on<{ id: string }>('card:update', (data) => this.updateCard(data.id));
+        this.events.on('card:update', (data: { id: string }) => {
+            const card = this.cards.get(data.id);
+            card.inCart = this.appData.isInCart(data.id);
+        });
     }
 
     public renderCatalog() {
