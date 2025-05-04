@@ -10,40 +10,6 @@ export class AppData {
     constructor(protected events: IEvents) {        
     }
 
-    // Валидация данных заказа
-    validateOrder(): boolean {
-        const errors: FormErrors = {};
-        
-        if (!this._order?.address || this._order.address.length < 6) {
-            errors.address = 'Адрес должен содержать минимум 6 символов';
-        }
-        
-        if (!this._order?.payment) {
-            errors.payment = 'Выберите способ оплаты';
-        }
-
-        this._formErrors = errors;
-        this.events.emit('formErrors:change', this._formErrors);
-        return Object.keys(errors).length === 0;
-    }
-
-    // Валидация контактных данных
-    validateContacts(): boolean {
-        const errors: FormErrors = {};
-        
-        if (!this._order?.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this._order.email)) {
-            errors.email = 'Введите корректный email';
-        }
-        
-        if (!this._order?.phone || !/^(\+7|8)\d{10}$/.test(this._order.phone)) {
-            errors.phone = 'Введите телефон в формате +7XXXXXXXXXX';
-        }
-
-        this._formErrors = errors;
-        this.events.emit('formErrors:change', this._formErrors);
-        return Object.keys(errors).length === 0;
-    }
-
     // Обновление полей заказа
     updateOrderField<K extends keyof IOrderData>(field: K, value: IOrderData[K]) {
         if (!this._order) this.initOrder();
@@ -131,5 +97,5 @@ export class AppData {
             item.quantity = Math.max(1, quantity);
             this.events.emit('cart:changed', this._cart);
         }
-    }
+    }    
 }

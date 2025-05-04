@@ -46,13 +46,13 @@ export class Modal extends Component<HTMLElement> {
         if (content) {
             this.content = content;
         }
-        this.addClass('modal_active'); // Замена classList.add
+        this.addClass('modal_active');
         document.addEventListener('keydown', this._handleKeyDown);
         this.events.emit('modal:open');
     }
     
     close() {
-        this.removeClass('modal_active'); // Замена classList.remove
+        this.removeClass('modal_active');
         document.removeEventListener('keydown', this._handleKeyDown);
         this.events.emit('modal:close');
     }

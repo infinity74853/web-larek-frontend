@@ -4,10 +4,9 @@ import { ensureElement } from "../../utils/utils";
 interface ISuccessActions {
     onClick: () => void;
 }
-
 export class Success extends Component<{ total: number }> {
     protected _close: HTMLElement;
-    private _descriptionElement: HTMLElement; // Изменили название для ясности
+    private _descriptionElement: HTMLElement;
 
     constructor(container: HTMLElement, actions: ISuccessActions) {
         super(container);

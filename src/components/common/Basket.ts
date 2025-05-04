@@ -3,6 +3,7 @@ import { AppData } from "../AppData";
 import { Card } from "../Card";
 import { cloneTemplate } from "../../utils/utils";
 import { IEvents } from "../base/Events";
+import { settings } from "../../utils/constants";
 
 export class Basket extends Component<HTMLElement> {
     protected _title: HTMLElement;
@@ -37,7 +38,7 @@ export class Basket extends Component<HTMLElement> {
     }
 
     private updateBasket() {
-        this._title.textContent = 'Корзина';
+        this._title.textContent = settings.labels.cartList;
         this._list.innerHTML = '';
         this.appData.cart.forEach((item, index) => {
             const card = new Card(cloneTemplate(this.cardBasketTemplate), {

@@ -13,8 +13,8 @@ export const settings = {
     // Валидация формы заказа
     validation: {
         minAddressLength: 6,
-        phonePattern: /^(\+7|8)\d{10}$/, // Используется в Contacts
-        emailPattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // Используется в Contacts
+        phonePattern: /^(\+7|8)\d{10}$/,
+        emailPattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
 
     // CSS-классы
@@ -77,6 +77,7 @@ export const settings = {
         notForSale: "Не продаётся",
         currency: "синапсов",
         priceless: "Бесценно",
+        cartList: "Корзина"
     }
 };
 

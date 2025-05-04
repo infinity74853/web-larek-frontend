@@ -7,7 +7,6 @@ interface ICardActions {
     onClick?: (event: MouseEvent) => void;
     onPreview?: () => void;
 }
-
 export class Card extends Component<ICard> {
     protected _title: HTMLElement;
     protected _priceElement: HTMLElement;
