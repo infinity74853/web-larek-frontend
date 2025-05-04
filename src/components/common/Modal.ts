@@ -35,10 +35,7 @@ export class Modal extends Component<HTMLElement> {
     // Новый метод для установки данных продукта
     setProductData(product: Product): void {
         this.setText('.modal__title', product.title);
-        this.setText('.modal__description', product.description || '');
-        // Добавьте другие поля по необходимости, например:
-        // this.setImage('.modal__image', product.image);
-        // this.setText('.modal__price', `${product.price} синапсов`);
+        this.setText('.modal__description', product.description || '');       
     }
 
     set content(value: HTMLElement) {
@@ -49,13 +46,13 @@ export class Modal extends Component<HTMLElement> {
         if (content) {
             this.content = content;
         }
-        this.container.classList.add('modal_active');
+        this.addClass('modal_active'); // Замена classList.add
         document.addEventListener('keydown', this._handleKeyDown);
         this.events.emit('modal:open');
     }
     
     close() {
-        this.container.classList.remove('modal_active');
+        this.removeClass('modal_active'); // Замена classList.remove
         document.removeEventListener('keydown', this._handleKeyDown);
         this.events.emit('modal:close');
     }

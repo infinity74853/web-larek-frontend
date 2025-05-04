@@ -163,7 +163,7 @@
 	</template>
 
 	<template id="card-catalog">
-		<button class="gallery__item card">
+		<button class="gallery__item card" data-id="{{id}}">
 			<span class="card__category card__category_soft">софт-скил</span>
 			<h2 class="card__title">+1 час в сутках</h2>
 			<img class="card__image" src="<%=require('../images/Subtract.svg')%>" alt="" />
@@ -172,7 +172,7 @@
 	</template>
 
 	<template id="card-preview">
-		<div class="card card_full" data-id="...">
+		<div class="card card_full" data-id="{{id}}">
 			<img class="card__image" src="<%=require('../images/Subtract.svg')%>" alt="" />
 			<div class="card__column">
 				<span class="card__category card__category_other">другое</span>
@@ -182,7 +182,7 @@
 					<button class="button card__button">В корзину</button>
 					<span class="card__price">1000 синапсов</span>
 				</div>
-			</div>
+			</div>			
 		</div>
 	</template>
 
@@ -197,7 +197,7 @@
 
 	<template id="basket">
 		<div class="basket">
-			<h2 class="basket__title modal__title">Корзина</h2>
+			<h2 class="basket__title">Корзина</h2>
 			<ul class="basket__list"></ul>
 			<div class="modal__actions">
 				<button class="button basket__button">Оформить</button>
@@ -210,12 +210,11 @@
 		<form class="form" name="order">
 		  <div class="order">
 			<div class="order__field">
-			  <h2 class="order__title modal__title">Способ оплаты</h2>
+			  <h2 class="order__title">Способ оплаты</h2>
 			  <div class="order__buttons">
 				<button name="card" type="button" class="button button_alt">Онлайн</button>
 				<button name="cash" type="button" class="button button_alt">При получении</button>
-			  </div>
-			  <span class="form__error payment-error"></span>
+			  </div>			  
 			</div>
 			<label class="order__field">
 			  <span class="form__label modal__title">Адрес доставки</span>
@@ -226,13 +225,12 @@
 				placeholder="Введите адрес"
 				minlength="6"
 				required
-			  >
-			  <span class="form__error address-error"></span>
+			  >			  
 			</label>
 		  </div>
 		  <div class="modal__actions">
 			<button type="submit" class="button order__button" disabled>Далее</button>
-			<span class="form__error submit-error"></span>
+			<div class="order-errors form-errors"></div>
 		  </div>
 		</form>
 	</template>
@@ -242,18 +240,16 @@
 			<div class="order">
 				<label class="order__field">
 					<span class="form__label modal__title">Email</span>
-					<input name="email" class="form__input" type="text" placeholder="Введите Email" />
-					<span class="form__error email-error"></span>
+					<input name="email" class="form__input" type="text" placeholder="Введите Email" />					
 				</label>
 				<label class="order__field">
 					<span class="form__label modal__title">Телефон</span>
-					<input name="phone" class="form__input" type="text" placeholder="+7 (" />
-					<span class="form__error phone-error"></span>
+					<input name="phone" class="form__input" type="text" placeholder="+7 (" />					
 				</label>
 			</div>
 			<div class="modal__actions">
 				<button type="submit" disabled class="button">Оплатить</button>
-				<span class="form__errors submit-error"></span>
+				<div class="contacts-errors form-errors"></div>
 			</div>
 		</form>
 	</template>

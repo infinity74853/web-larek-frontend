@@ -3,7 +3,6 @@ import { AppData } from "../AppData";
 import { Card } from "../Card";
 import { cloneTemplate } from "../../utils/utils";
 import { IEvents } from "../base/Events";
-import { ICard } from "../../types";
 
 export class Basket extends Component<HTMLElement> {
     protected _title: HTMLElement;
@@ -18,7 +17,7 @@ export class Basket extends Component<HTMLElement> {
         private cardBasketTemplate: HTMLTemplateElement
     ) {
         super(container);
-        this._title = this.container.querySelector('.modal__title');
+        this._title = this.container.querySelector('.basket__title');
         this._list = this.container.querySelector('.basket__list');
         this._total = this.container.querySelector('.basket__price');
         this._button = this.container.querySelector('.basket__button');
@@ -56,6 +55,6 @@ export class Basket extends Component<HTMLElement> {
         });
         
         this._total.textContent = `${this.appData.getCartTotal()} синапсов`;
-        this._button.disabled = this.appData.cart.length === 0;
+        this.setDisabled(this._button, this.appData.cart.length === 0);
     }
 }

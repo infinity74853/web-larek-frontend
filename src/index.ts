@@ -10,7 +10,7 @@ import { Page } from "./components/Page";
 import { Card } from "./components/Card";
 import { Product, IOrderForm, IContactsForm } from "./types";
 import { Contacts } from "./components/Contacts";
-import { API_URL, CDN_URL } from "./utils/constants";
+import { settings, API_URL, CDN_URL } from "./utils/constants";
 import { ensureElement, cloneTemplate } from "./utils/utils";
 import { Success } from './components/common/Success';
 
@@ -18,7 +18,7 @@ import { Success } from './components/common/Success';
 const api = new LarekAPI(API_URL, CDN_URL);
 
 api.getProducts()
-    .then((products) => { // products уже массив
+    .then((products) => {
         appData.setCatalog(products);
     });
 
@@ -34,13 +34,13 @@ const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 // Инициализация компонентов
 const events = new EventEmitter();
 const modal = new Modal(document.querySelector('#modal-container'), events, document.querySelector('#success') as HTMLTemplateElement);
-const appData = new AppData(cardPreviewTemplate, events);
+const appData = new AppData(events);
 const page = new Page(appData, events, cardCatalogTemplate, ensureElement('#app-container'));
 const basket = new Basket(cloneTemplate(basketTemplate), events, appData, cardBasketTemplate);
 const basketCounter = ensureElement('.header__basket-counter');
 const appContainer = ensureElement('#app-container');
 const contacts = new Contacts(cloneTemplate(contactsTemplate), events);
-const orderComponent = new Order(cloneTemplate(orderTemplate), events);
+const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsForm = cloneTemplate(contactsTemplate) as HTMLFormElement;
 const contactsComponent = new Contacts(contactsForm, events);
 
@@ -58,15 +58,29 @@ events.on('product:add', (product: Product) => {
     appData.addToCart(product);
 });
 
+events.on('card:update', (data: { id: string; inCart: boolean }) => {
+    // Добавляем поиск по data-product-id для превью-карточек
+    const selector = `
+        [data-id="${data.id}"] .card__button,
+        [data-product-id="${data.id}"] .card__button
+    `;
+    
+    document.querySelectorAll<HTMLButtonElement>(selector).forEach(button => {
+        button.disabled = data.inCart;
+        button.textContent = data.inCart ? settings.labels.inCart : settings.labels.addToCart;
+    });
+});
+
 events.on('preview:open', (product: Product) => {
     const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
-        onClick: () => {
-            appData.addToCart(product);
-            modal.close();
-        }
+        onClick: () => events.emit('product:add', product)
     });
+    
+    // Принудительное обновление состояния
     previewCard.render(product);
-    modal.open(previewCard.containerElement);
+    previewCard.inCart = appData.isInCart(product.id);
+    
+    modal.open(previewCard.getContainer());
 });
 
 // Инициализация корзины
@@ -97,20 +111,20 @@ events.on('order:start', () => {
     const modalContent = document.querySelector('#modal-container .modal__content');
     if (modalContent) {
         modalContent.innerHTML = '';
-        modalContent.appendChild(orderComponent.getContainer()); // Используем метод
+        modalContent.appendChild(orderComponent.getContainer());
         events.emit('modal:open');
     }
 });
 
 events.on('order:submit', (data: IOrderForm) => {
-    console.log('Order form submitted:', data);
-    appData.updateOrder(data);
+    appData.updateOrderField('payment', data.payment);
+    appData.updateOrderField('address', data.address);
     events.emit('contacts:open');
 });
 
 events.on('contacts:submit', (data: IContactsForm) => {
-    appData.updateOrder(data);
-    events.emit('order:complete');
+    appData.updateOrderField('email', data.email);
+    appData.updateOrderField('phone', data.phone);
 });
 
 events.on('contacts:open', () => {
@@ -123,16 +137,13 @@ events.on('contacts:open', () => {
 });
 
 events.on('order:complete', () => {
-    // Очищаем корзину ПЕРЕД показом успешного сообщения
-    appData.clearCart();
-    
     const successTemplate = document.getElementById('success') as HTMLTemplateElement;
     const successComponent = new Success(cloneTemplate(successTemplate), {
-        onClick: () => {
-            events.emit('modal:close');
-            events.emit('cart:changed'); // Обновляем корзину
-        }
+        onClick: () => events.emit('modal:close')
     });
+    
+    // Передаём актуальную сумму
+    successComponent.total = appData.order?.total || 0;
 
     const modalContent = document.querySelector('#modal-container .modal__content');
     if (modalContent) {
@@ -140,6 +151,8 @@ events.on('order:complete', () => {
         modalContent.appendChild(successComponent.getContainer());
         events.emit('modal:open');
     }
+    
+    appData.clearCart();
 });
 
 // Добавить обработчик закрытия модалки

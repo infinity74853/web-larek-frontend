@@ -42,7 +42,7 @@ export class Form<T> extends Component<IFormState> {
     }
 
     set errors(value: string) {
-        this.setText('.form__errors', value); // Селектор для блока ошибок
+        this.setText('.form__errors', value);
     }
 
     render(state: Partial<T> & IFormState) {
@@ -50,6 +50,5 @@ export class Form<T> extends Component<IFormState> {
         super.render({valid, errors});
         Object.assign(this, inputs);
         return this.container;
-
     }
 }

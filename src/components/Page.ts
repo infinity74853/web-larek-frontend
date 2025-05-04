@@ -2,10 +2,9 @@ import { AppData } from "./AppData";
 import { Card } from "./Card";
 import { cloneTemplate } from "../utils/utils";
 import { IEvents } from "./base/Events";
-import { Product } from "../types";
 
 export class Page {
-    private cards: Map<string, Card>; // Хранилище карточек
+    private cards: Map<string, Card>;
 
     constructor(
         private appData: AppData,
@@ -22,7 +21,7 @@ export class Page {
     }
 
     public renderCatalog() {
-        this.cards.clear(); // Очищаем предыдущие карточки
+        this.cards.clear();
         this.appContainer.innerHTML = '';
         const fragment = document.createDocumentFragment();
         
@@ -46,16 +45,9 @@ export class Page {
             // Сохраняем карточку в хранилище
             this.cards.set(product.id, card);
             
-            fragment.appendChild(card.containerElement);
+            fragment.appendChild(card.getContainer());
         });
         
         this.appContainer.appendChild(fragment);
-    }
-
-    private updateCard(id: string) {
-        const card = this.cards.get(id);
-        if (card) {
-            card.inCart = this.appData.isInCart(id);
-        }
-    }
+    }    
 }

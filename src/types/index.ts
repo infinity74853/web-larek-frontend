@@ -45,3 +45,10 @@ export type Category =
   'дополнительное' | 
   'кнопка' | 
   'другое';
+
+  export interface IOrderResult {
+    id: string;
+    total: number;
+}
+
+export type FormErrors = Partial<Record<keyof IOrderData, string>>;

@@ -2,30 +2,34 @@ import { Component } from "./base/Component";
 import { IEvents } from "./base/Events";
 import { IOrderForm } from "../types";
 import { ensureElement } from "../utils/utils";
+import { settings } from "../utils/constants";
+import { AppData } from "./AppData";
 
 export class Order extends Component<HTMLFormElement> {
     private _title: HTMLElement;
     protected _paymentButtons: HTMLButtonElement[];
     protected _addressInput: HTMLInputElement;
     protected _submitButton: HTMLButtonElement;
-    protected _paymentError: HTMLElement;
-    protected _addressError: HTMLElement;
-    protected _submitError: HTMLElement;
+    protected _errorContainer: HTMLElement;
 
     constructor(
         container: HTMLFormElement,
-        protected events: IEvents
+        protected events: IEvents,
+        protected appData: AppData
     ) {
         super(container);
         
         // Инициализация элементов
-        this._title = ensureElement<HTMLElement>('.modal__title', container);
+        this._title = ensureElement<HTMLElement>('.order__title', container);
         this._paymentButtons = Array.from(container.querySelectorAll('button[name]'));
         this._addressInput = ensureElement<HTMLInputElement>('[name="address"]', container);
         this._submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
-        this._paymentError = ensureElement<HTMLElement>('.payment-error', container);
-        this._addressError = ensureElement<HTMLElement>('.address-error', container);
-        this._submitError = ensureElement<HTMLElement>('.submit-error', container);
+        this._errorContainer = ensureElement<HTMLElement>('.order-errors', container);
+
+        this.events.on('order:change', () => {
+            this.updateForm();
+        });
+        
 
         this._title.textContent = 'Способ оплаты';
 
@@ -33,12 +37,12 @@ export class Order extends Component<HTMLFormElement> {
         this._paymentButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 this.handlePaymentChange(e);
-                this.clearPaymentError();
+                this.updateErrors();
             });
         });
 
         this._addressInput.addEventListener('input', () => {
-            this.validateAddress();
+            this.updateErrors();
             this.updateForm();
         });
 
@@ -51,37 +55,37 @@ export class Order extends Component<HTMLFormElement> {
     private handlePaymentChange(e: Event) {
         const button = e.target as HTMLButtonElement;
         this._paymentButtons.forEach(b => 
-            b.classList.remove('button_alt-active')
+            b.classList.remove(settings.classes.button.active)
         );
-        button.classList.add('button_alt-active');
+        button.classList.add(settings.classes.button.active);
+        this.updateErrors();
     }
 
-    private validateAddress() {
-        const isValid = this._addressInput.value.trim().length >= 6;
-        this.toggleError(
-            this._addressError, 
-            !isValid, 
-            'Адрес должен содержать не менее 6 символов'
-        );
-    }
-
-    private clearPaymentError() {
-        this.toggleError(this._paymentError, false);
-    }
-
-    private toggleError(element: HTMLElement, show: boolean, message?: string) {
-        element.textContent = message || '';
-        element.style.display = show ? 'block' : 'none';
-        if (element === this._addressError) {
-            this._addressInput.classList.toggle('form__input_invalid', show);
+    private updateErrors() {
+        const errors: string[] = [];
+        
+        // Валидация адреса
+        if (!this._addressInput.value.trim()) {
+            errors.push(settings.errorMessages.order.addressRequired);
+        } else if (!this.isAddressValid()) {
+            errors.push(settings.errorMessages.order.addressInvalid);
         }
+        
+        // Валидация способа оплаты
+        if (!this.selectedPayment) {
+            errors.push(settings.errorMessages.order.payment);
+        }
+
+        this._errorContainer.textContent = errors.join('; ');
+        this._errorContainer.style.display = errors.length ? 'block' : 'none';
+    }
+
+    private isAddressValid(): boolean {
+        return this._addressInput.value.trim().length >= 6;
     }
 
     private updateForm() {
-        const isValid = this.isValid;
-        this._submitButton.disabled = !isValid;
-        this._submitError.textContent = isValid ? '' : 'Заполните все обязательные поля';
-        this._submitError.style.display = isValid ? 'none' : 'block';
+        this.setDisabled(this._submitButton, !this.isValid);
     }
 
     private get isValid(): boolean {
@@ -96,23 +100,25 @@ export class Order extends Component<HTMLFormElement> {
     }
 
     set address(value: string) {
-        this._addressInput.value = value;
-        this.validateAddress();
+        this._addressInput.value = value;        
     }
 
     resetPayment() {
         this._paymentButtons.forEach(b => 
             b.classList.remove('button_alt-active')
-        );
-        this.toggleError(this._paymentError, false);
+        );        
     }
 
     private handleSubmit() {
-        if (this.isValid) {
+        // Сохраняем данные в модель перед валидацией
+        this.appData.updateOrderField('payment', this.selectedPayment);
+        this.appData.updateOrderField('address', this._addressInput.value.trim());
+
+        if (this.appData.validateOrder()) {
             this.events.emit('order:submit', {
                 payment: this.selectedPayment,
                 address: this._addressInput.value.trim()
-            } as IOrderForm);
+            });
         }
     }
 }

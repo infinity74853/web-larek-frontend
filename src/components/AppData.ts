@@ -1,85 +1,57 @@
-//import { EventEmitter } from "./base/Events";
-import { Product, ICartItem, IOrderData } from "../types";
-import { cloneTemplate } from "../utils/utils";
+import { Product, ICartItem, IOrderData, FormErrors } from "../types";
 import { IEvents } from "./base/Events";
 
 export class AppData {
     private _products: Product[] = [];
     private _cart: ICartItem[] = [];
     private _order: IOrderData | null = null;
-    private _previewTemplate: HTMLTemplateElement;
-    
-    constructor(
-        previewTemplate: HTMLTemplateElement,
-        protected events: IEvents
-    ) {
-        this._previewTemplate = previewTemplate;
+    private _formErrors: FormErrors = {};
+
+    constructor(protected events: IEvents) {        
+    }
+
+    // Валидация данных заказа
+    validateOrder(): boolean {
+        const errors: FormErrors = {};
         
-        // Автоматическая подписка на события
-        events.on('preview:open', (product: Product) => this.openProductPreview(product));
+        if (!this._order?.address || this._order.address.length < 6) {
+            errors.address = 'Адрес должен содержать минимум 6 символов';
+        }
+        
+        if (!this._order?.payment) {
+            errors.payment = 'Выберите способ оплаты';
+        }
+
+        this._formErrors = errors;
+        this.events.emit('formErrors:change', this._formErrors);
+        return Object.keys(errors).length === 0;
     }
 
-    get order(): IOrderData | null {
-        return this._order;
+    // Валидация контактных данных
+    validateContacts(): boolean {
+        const errors: FormErrors = {};
+        
+        if (!this._order?.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this._order.email)) {
+            errors.email = 'Введите корректный email';
+        }
+        
+        if (!this._order?.phone || !/^(\+7|8)\d{10}$/.test(this._order.phone)) {
+            errors.phone = 'Введите телефон в формате +7XXXXXXXXXX';
+        }
+
+        this._formErrors = errors;
+        this.events.emit('formErrors:change', this._formErrors);
+        return Object.keys(errors).length === 0;
     }
 
-    // Геттер для шаблона превью
-    get previewTemplate(): HTMLTemplateElement {
-        return this._previewTemplate;
+    // Обновление полей заказа
+    updateOrderField<K extends keyof IOrderData>(field: K, value: IOrderData[K]) {
+        if (!this._order) this.initOrder();
+        this._order[field] = value;
+        this.events.emit('order:change', this._order);
     }
 
-    // Основные геттеры
-    get products(): Product[] {
-        return this._products;
-    }
-
-    get cart(): ICartItem[] {
-        return this._cart;
-    }
-
-    // Обновленный метод установки каталога
-    setCatalog(products: Product[]): void {
-        this._products = products;
-        this.events.emit('catalog:changed', this._products); // Явная передача данных
-    }
-
-    // Метод открытия превью товара
-    openProductPreview(product: Product) {
-        this.events.emit('preview:changed', product);
-        this.events.emit('modal:set-data', product);
-    }
-
-    // Методы работы с корзиной
-    private generateUID(): string {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-
-    addToCart(product: Product): void {
-        this._cart.push({
-            id: this.generateUID(),
-            productId: product.id,
-            quantity: 1,
-            price: product.price || 0,
-            title: product.title
-        });
-        this.events.emit('cart:changed', this._cart);
-        this.events.emit('card:update', { id: product.id });
-    }
-
-    // Остальные методы
-    removeFromCart(id: string): void {
-        this._cart = this._cart.filter(item => item.id !== id);
-        this.events.emit('cart:changed', this._cart);
-    }
-
-    isInCart(id: string): boolean {
-        return this._cart.some(item => item.productId === id);
-    }
-    
-    getCartTotal(): number {
-        return this._cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    }
-
+    // Инициализация заказа
     initOrder(): void {
         this._order = {
             payment: '',
@@ -90,16 +62,54 @@ export class AppData {
             total: this.getCartTotal()
         };
         this.events.emit('order:init', this._order);
-        this.events.emit('modal:open'); // Добавляем открытие модального окна
     }
 
-    // Добавим метод обновления количества
-    updateCartItem(id: string, quantity: number): void {
-        const item = this._cart.find(i => i.id === id);
-        if (item) {
-            item.quantity = Math.max(1, quantity);
+    get order(): IOrderData | null {
+        return this._order;
+    }
+
+    get products(): Product[] {
+        return this._products;
+    }
+
+    get cart(): ICartItem[] {
+        return this._cart;
+    }
+
+    setCatalog(products: Product[]): void {
+        this._products = products;
+        this.events.emit('catalog:changed', this._products);
+    }
+
+    // Добавление в корзину с проверкой
+    addToCart(product: Product): void {
+        if (!this.isInCart(product.id)) {
+            this._cart.push({
+                id: this.generateUID(),
+                productId: product.id,
+                quantity: 1,
+                price: product.price || 0,
+                title: product.title
+            });
             this.events.emit('cart:changed', this._cart);
+            this.events.emit('card:update', { id: product.id, inCart: true });
         }
+    }
+
+    removeFromCart(id: string): void {
+        const item = this._cart.find(item => item.id === id);
+        if (item) {
+            this._cart = this._cart.filter(item => item.id !== id);
+            this.events.emit('cart:changed', this._cart);
+            this.events.emit('card:update', { 
+                id: item.productId, 
+                inCart: this.isInCart(item.productId) 
+            });
+        }
+    }
+
+    getCartTotal(): number {
+        return this._cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }
 
     clearCart(): void {
@@ -107,10 +117,19 @@ export class AppData {
         this.events.emit('cart:changed', this._cart);
     }
 
-    updateOrder(data: Partial<IOrderData>): void {
-        if (this._order) {
-            this._order = { ...this._order, ...data };
-            this.events.emit('order:changed', this._order);
+    private generateUID(): string {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    isInCart(productId: string): boolean {
+        return this._cart.some(item => item.productId === productId);
+    }
+
+    updateCartItem(id: string, quantity: number): void {
+        const item = this._cart.find(i => i.id === id);
+        if (item) {
+            item.quantity = Math.max(1, quantity);
+            this.events.emit('cart:changed', this._cart);
         }
     }
 }

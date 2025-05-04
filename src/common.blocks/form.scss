@@ -36,17 +36,16 @@
   }
 }
 
-.form__error {
-  color: #ff6969;
-  font-size: 28px;
-  margin-top: 5px;
-  display: none;
-}
+.form-errors {
+  display: inline-block;
+  color: #ffa5a5;
+  font-size: 24px;
+  margin-left: 15px;
+  vertical-align: middle;
 
-.form__errors.submit-error {
-  color: #ff6969;
-  font-size: 28px;
-  
+  &:empty {
+    display: none;
+  }
 }
 
 .form__input_invalid {
@@ -60,20 +59,8 @@
     align-items: stretch;
   }
   
-  .form__error.submit-error.form__errors {
+  .form__errors {
     text-align: center;
     order: -1;
   }
-}
-
-.form__error.form__errors {
-  transition: opacity 0.3s ease-in-out;
-}
-
-.form__error:not(:empty) {
-  opacity: 1;
-}
-
-.form__error:empty {
-  opacity: 0;
 }
