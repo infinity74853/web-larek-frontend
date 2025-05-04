@@ -69,7 +69,7 @@ export const settings = {
 
 	// Текстовые константы
 	labels: {
-		addToCart: 'В корзину',
+		addToCart: 'Купить',
 		inCart: 'Уже в корзине',
 		total: 'Итого:',
 		checkout: 'Оформить заказ',
