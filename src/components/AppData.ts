@@ -46,7 +46,7 @@ export class AppData {
 		this.events.emit('catalog:changed', this._products);
 	}
 
-	// Добавление в корзину с проверкой
+	// Добавление в корзину
 	addToCart(product: Product): void {
 		if (!this.isInCart(product.id)) {
 			this._cart.push({

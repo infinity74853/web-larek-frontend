@@ -97,7 +97,7 @@ export class Order extends FormComponent<HTMLFormElement> {
 		}
 	}
 
-	// Исправлено: метод стал protected
+	// Валидация адреса доставки
 	protected validateAddress(value: string): boolean {
 		return value.length >= settings.validation.minAddressLength;
 	}

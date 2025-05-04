@@ -26,7 +26,6 @@ export class Success extends Component<{ total: number }> {
 	}
 
 	set total(value: number) {
-		// Прямое обновление текста элемента без использования setText
 		this._descriptionElement.textContent = `Списано ${value} синапсов`;
 	}
 }

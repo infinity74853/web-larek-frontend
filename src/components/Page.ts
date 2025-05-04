@@ -31,10 +31,10 @@ export class Page {
 				onPreview: () => this.events.emit('preview:open', product),
 			});
 
-			// Инициализируем состояние кнопки
+			// Состояние кнопки
 			card.inCart = this.appData.isInCart(product.id);
 
-			// Устанавливаем свойства карточки
+			// Свойства карточки
 			card.id = product.id;
 			card.title = product.title;
 			card.price = product.price;
@@ -42,7 +42,6 @@ export class Page {
 			card.image = product.image;
 			card.description = product.description;
 
-			// Сохраняем карточку в хранилище
 			this.cards.set(product.id, card);
 
 			fragment.appendChild(card.getContainer());

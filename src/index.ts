@@ -28,9 +28,9 @@ const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 // Инициализация компонентов
 const events = new EventEmitter();
 const modal = new Modal(
-	document.querySelector('#modal-container'),
+	ensureElement<HTMLElement>('#modal-container'),
 	events,
-	document.querySelector('#success') as HTMLTemplateElement
+	ensureElement<HTMLTemplateElement>('#success')
 );
 const appData = new AppData(events);
 
@@ -53,11 +53,8 @@ const basket = new Basket(
 	cardBasketTemplate
 );
 const basketCounter = ensureElement('.header__basket-counter');
-//const appContainer = ensureElement('#app-container');
-//const contacts = new Contacts(cloneTemplate(contactsTemplate), events);
 const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
-//const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 events.on('modal:set-data', (product: Product) => {
 	modal.setProductData(product);
@@ -114,20 +111,18 @@ events.on('basket:update', (event: { id: string; quantity: number }) => {
 	appData.updateCartItem(event.id, event.quantity);
 });
 
-// Добавляем обработчики
+// Оформление заказа
 events.on('order:start', () => {
 	appData.initOrder();
 	orderComponent.resetPayment();
 	orderComponent.address = '';
 
-	const modalContent = document.querySelector(
+	const modalContent = ensureElement<HTMLElement>(
 		'#modal-container .modal__content'
 	);
-	if (modalContent) {
-		modalContent.innerHTML = '';
-		modalContent.appendChild(orderComponent.getContainer());
-		events.emit('modal:open');
-	}
+	modalContent.innerHTML = '';
+	modalContent.appendChild(orderComponent.getContainer());
+	events.emit('modal:open');
 });
 
 events.on('order:submit', (data: IOrderForm) => {
@@ -137,14 +132,12 @@ events.on('order:submit', (data: IOrderForm) => {
 });
 
 events.on('contacts:open', () => {
-	const modalContent = document.querySelector(
+	const modalContent = ensureElement<HTMLElement>(
 		'#modal-container .modal__content'
 	);
-	if (modalContent) {
-		modalContent.innerHTML = '';
-		modalContent.appendChild(contactsComponent.getContainer());
-		events.emit('modal:open');
-	}
+	modalContent.innerHTML = '';
+	modalContent.appendChild(contactsComponent.getContainer());
+	events.emit('modal:open');
 });
 
 // Обработчик отправки контактов
@@ -152,35 +145,29 @@ events.on('contacts:submit', (data: IContactsForm) => {
 	appData.updateOrderField('email', data.email);
 	appData.updateOrderField('phone', data.phone);
 
-	// Дополнительные действия после сохранения
 	appData.clearCart();
 	modal.renderSuccess(appData.order.total);
 });
 
 events.on('order:complete', () => {
-	const successTemplate = document.getElementById(
-		'success'
-	) as HTMLTemplateElement;
+	const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 	const successComponent = new Success(cloneTemplate(successTemplate), {
 		onClick: () => events.emit('modal:close'),
 	});
 
-	// Передаём актуальную сумму
 	successComponent.total = appData.order?.total || 0;
 
-	const modalContent = document.querySelector(
+	const modalContent = ensureElement<HTMLElement>(
 		'#modal-container .modal__content'
 	);
-	if (modalContent) {
-		modalContent.innerHTML = '';
-		modalContent.appendChild(successComponent.getContainer());
-		events.emit('modal:open');
-	}
+	modalContent.innerHTML = '';
+	modalContent.appendChild(successComponent.getContainer());
+	events.emit('modal:open');
 
 	appData.clearCart();
 });
 
-// Добавить обработчик закрытия модалки
+// Обработчик закрытия модалки
 events.on('modal:close', () => {
 	events.emit('cart:changed');
 	const modalContainer = document.getElementById('modal-container');
