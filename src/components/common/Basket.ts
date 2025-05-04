@@ -1,7 +1,7 @@
 import { Component } from '../base/Component';
 import { AppData } from '../AppData';
 import { Card } from '../Card';
-import { cloneTemplate } from '../../utils/utils';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
 import { settings } from '../../utils/constants';
 
@@ -18,18 +18,24 @@ export class Basket extends Component<HTMLElement> {
 		private cardBasketTemplate: HTMLTemplateElement
 	) {
 		super(container);
-		this._title = this.container.querySelector('.basket__title');
-		this._list = this.container.querySelector('.basket__list');
-		this._total = this.container.querySelector('.basket__price');
-		this._button = this.container.querySelector('.basket__button');
+		this._title = ensureElement<HTMLElement>('.basket__title', this.container);
+		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
+		this._total = ensureElement<HTMLElement>('.basket__price', this.container);
+		this._button = ensureElement<HTMLButtonElement>(
+			'.basket__button',
+			this.container
+		);
 		this.initialize();
 		this.updateBasket();
 	}
 
 	private initialize() {
-		this._list = this.container.querySelector('.basket__list');
-		this._total = this.container.querySelector('.basket__price');
-		this._button = this.container.querySelector('.basket__button');
+		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
+		this._total = ensureElement<HTMLElement>('.basket__price', this.container);
+		this._button = ensureElement<HTMLButtonElement>(
+			'.basket__button',
+			this.container
+		);
 
 		this.events.on('cart:changed', () => this.updateBasket());
 		this._button.addEventListener('click', () => {

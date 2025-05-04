@@ -20,6 +20,7 @@ export class Card extends Component<ICard> {
 
 		this._title = ensureElement<HTMLElement>('.card__title', container);
 		this._priceElement = ensureElement<HTMLElement>('.card__price', container);
+
 		this._category = container.querySelector('.card__category');
 		this._button = container.querySelector('.card__button');
 

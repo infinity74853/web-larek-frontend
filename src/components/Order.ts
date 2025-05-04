@@ -1,11 +1,12 @@
+import { ensureElement } from '../utils/utils';
 import { FormComponent } from './common/Form';
 import { IEvents } from './base/Events';
 import { AppData } from './AppData';
 import { settings } from '../utils/constants';
-import { ensureElement } from '../utils/utils';
 
 export class Order extends FormComponent<HTMLFormElement> {
-	protected _paymentButtons: HTMLButtonElement[];
+	protected _paymentCard: HTMLButtonElement;
+	protected _paymentCash: HTMLButtonElement;
 	protected _addressInput: HTMLInputElement;
 
 	constructor(
@@ -14,20 +15,26 @@ export class Order extends FormComponent<HTMLFormElement> {
 		protected appData: AppData
 	) {
 		super(container, events, 'order');
-		this._paymentButtons = Array.from(
-			container.querySelectorAll('button[name]')
+
+		this._paymentCard = ensureElement<HTMLButtonElement>(
+			'.button_alt[name="card"]',
+			container
+		);
+		this._paymentCash = ensureElement<HTMLButtonElement>(
+			'.button_alt[name="cash"]',
+			container
 		);
 		this._addressInput = ensureElement<HTMLInputElement>(
 			'[name="address"]',
 			container
 		);
+
 		this.initEventListeners();
 	}
 
 	resetPayment() {
-		this._paymentButtons.forEach((b) =>
-			b.classList.remove(settings.classes.button.active)
-		);
+		this._paymentCard.classList.remove(settings.classes.button.active);
+		this._paymentCash.classList.remove(settings.classes.button.active);
 	}
 
 	set address(value: string) {
@@ -35,18 +42,19 @@ export class Order extends FormComponent<HTMLFormElement> {
 	}
 
 	private initEventListeners(): void {
-		this._paymentButtons.forEach((button) =>
-			button.addEventListener('click', (e) => this.handlePaymentChange(e))
+		this._paymentCard.addEventListener('click', () =>
+			this.handlePaymentChange('card')
+		);
+		this._paymentCash.addEventListener('click', () =>
+			this.handlePaymentChange('cash')
 		);
 		this._addressInput.addEventListener('input', () => this.updateForm());
 		this.container.addEventListener('submit', (e) => this.handleSubmit(e));
 	}
 
-	private handlePaymentChange(e: Event): void {
-		const button = e.target as HTMLButtonElement;
-		this._paymentButtons.forEach((b) =>
-			b.classList.remove(settings.classes.button.active)
-		);
+	private handlePaymentChange(method: 'card' | 'cash'): void {
+		this.resetPayment();
+		const button = method === 'card' ? this._paymentCard : this._paymentCash;
 		button.classList.add(settings.classes.button.active);
 		this.updateForm();
 	}
@@ -70,20 +78,27 @@ export class Order extends FormComponent<HTMLFormElement> {
 	}
 
 	private get selectedPayment(): string | null {
-		return (
-			this._paymentButtons.find((b) =>
-				b.classList.contains(settings.classes.button.active)
-			)?.name || null
-		);
+		return this._paymentCard.classList.contains(settings.classes.button.active)
+			? 'card'
+			: this._paymentCash.classList.contains(settings.classes.button.active)
+			? 'cash'
+			: null;
 	}
 
 	private handleSubmit(e: Event): void {
 		e.preventDefault();
-		this.appData.updateOrderField('payment', this.selectedPayment);
-		this.appData.updateOrderField('address', this._addressInput.value.trim());
-		this.events.emit('order:submit', {
-			payment: this.selectedPayment,
-			address: this._addressInput.value.trim(),
-		});
+		if (this.selectedPayment) {
+			this.appData.updateOrderField('payment', this.selectedPayment);
+			this.appData.updateOrderField('address', this._addressInput.value.trim());
+			this.events.emit('order:submit', {
+				payment: this.selectedPayment,
+				address: this._addressInput.value.trim(),
+			});
+		}
+	}
+
+	// Исправлено: метод стал protected
+	protected validateAddress(value: string): boolean {
+		return value.length >= settings.validation.minAddressLength;
 	}
 }

@@ -1,7 +1,7 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
 import { Product } from '../../types';
-import { cloneTemplate } from '../../utils/utils';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
 
 export class Modal extends Component<HTMLElement> {
 	protected _closeButton: HTMLButtonElement;
@@ -17,8 +17,11 @@ export class Modal extends Component<HTMLElement> {
 	) {
 		super(container);
 		this.successTemplate = successTemplate;
-		this._closeButton = this.container.querySelector('.modal__close');
-		this._content = this.container.querySelector('.modal__content');
+		this._closeButton = ensureElement<HTMLButtonElement>(
+			'.modal__close',
+			container
+		);
+		this._content = ensureElement<HTMLElement>('.modal__content', container);
 
 		// Инициализируем обработчик клавиатуры
 		this._handleKeyDown = (event: KeyboardEvent) => {
