@@ -83,7 +83,7 @@ yarn build
 ### Общие требования
 
 Модальные окна закрываются при клике вне модального окна, по клавише 'Esc' или по иконке «В корзину».
-Кнопка перехода к следующему шагу доступна только если действия на текущей странице выполнены 
+Кнопка перехода к следующему шагу доступна только если действия на текущей странице выполнены
 (например, указан адрес доставки, способ оплаты, указание телефона и почты).
 
 ### Техническая реализация
@@ -130,26 +130,21 @@ yarn build
 
 ### abstract class Component`<T>` `(src/components/base/Component.ts)`
 
-Базовый абстрактный класс для всех UI-компонентов, реализующий общую логику работы с DOM.
+Базовый абстрактный класс для создания UI-компонентов с общими методами работы с DOM.
 
 Свойства:
 
-- protected readonly container: HTMLElement  // Корневой DOM-элемент
+- container: HTMLElement // Корневой DOM-элемент компонента.
 
 Конструктор:
 
-- protected constructor(protected readonly container: HTMLElement)  // Принимает корневой DOM-элемент (контейнер) компонента
+- constructor(container: HTMLElement) // Принимает корневой элемент компонента.
 
 Методы:
 
-- public getContainer(): HTMLElement  // Инструментарий для работы с DOM в дочерних компонентах
-- toggleClass(element: HTMLElement, className: string, force?: boolean)  // Переключить класс
-- protected setText(element: HTMLElement, value: unknown)  // Установить текстовое содержимое
-- setDisabled(element: HTMLElement, state: boolean)  // Сменить статус блокировки
-- protected setHidden(element: HTMLElement)  // Скрыть
-- protected setVisible(element: HTMLElement)  // Показать
-- protected setImage(element: HTMLImageElement, src: string, alt?: string)  // Установить изображение с альтернативным текстом
-- render(data?: Partial`<T>`): HTMLElement  // Вернуть корневой DOM-элемент
+- render(data?: Partial`<T>`): HTMLElement // Обновляет данные компонента и возвращает контейнер.
+- setText(selector: string, value: string): void // Устанавливает текст для элемента внутри компонента.
+- setImage(selector: string, src: string, alt?: string): void // Обновляет изображение.
 
 ```
 interface IEvents {
@@ -207,9 +202,6 @@ Cвойства:
 - _products: Product[]  // Массив товаров в каталоге
 - _cart: ICartItem[]  // Массив товаров в корзине
 - _order: IOrderData | null  // Данные текущего заказа
-- _preview: Product | null  // Товар, который сейчас просматривается
-- _previewTemplate: HTMLTemplateElement  // Шаблон для отображения превью товара
-- events: IEvents  // Система событий приложения (передается через конструктор)
 
 Конструктор:
 
@@ -253,28 +245,21 @@ interface IBasketView {
 
 ### class Basket extends Component`<IBasketView>` `(src/components/common/Basket.ts)`
 
-Отвечает за отображение и управление корзиной покупок в интерфейсе.
+Компонент корзины с товарами.
 
 Свойства:
 
-- protected _list: HTMLElement;  //Контейнер для списка товаров в корзине
-- protected _total: HTMLElement;  //Элемент, отображающий итоговую сумму
-- protected _button: HTMLElement;  //Кнопка оформления заказа
-- protected _counter: HTMLElement;  //Счётчик товаров в корзине (например, в шапке сайта)
+- _list: HTMLElement // Список товаров в корзине.
+- _total: HTMLElement // Итоговая сумма.
 
 Конструктор:
 
-- constructor(container: HTMLElement, protected events: EventEmitter)  //Инициализирует корзину
-
-Сеттеры:
-
-- set items(items: HTMLElement[])  // Обновляет список товаров в корзине
-- set total(total: number)  // Обновляет итоговую сумму и счётчик товаров
+- constructor(container: HTMLElement, events: IEvents, appData: AppData, template: HTMLTemplateElement)
 
 Методы:
 
-- private ensureElementSafe(selector: string): HTMLElement  // Безопасный метод для получения DOM-элемента внутри контейнера класса
-- private ensureCounterElement(): HTMLElement  // Создаёт счётчик товаров в корзине
+- render(): HTMLElement // Отрисовывает корзину с актуальными данными.
+- updateTotal(total: number): void // Обновляет итоговую сумму.
 
 ```
 interface IFormState {
@@ -330,7 +315,7 @@ interface IModalData {
 
 Методы:
 
-- private _setupEventListeners()  // Настраивает обработчики событий
+- setProductData(product: Product): void  // Данные продукта
 - open()  // Открывает модальное окно, если оно не открыто
 - close()  // Закрывает модальное окно, если оно открыто
 
@@ -369,36 +354,22 @@ interface ICardActions {
 
 ### class Card extends Component`<ICard>` `(src/components/Card.ts)`
 
-Управляет отображением товара, обрабатывает взаимодействия, интегрируется с API.
+Компонент карточки товара (каталог/превью/корзина).
 
 Свойства:
 
-- protected _title: HTMLElement;  // Заголовок карточки
-- protected _image?: HTMLImageElement;  // Изображение товара (опционально)
-- protected _price: HTMLElement;  // Цена товара
-- protected _category?: HTMLElement;  // Категория товара (опционально)
-- protected _button?: HTMLButtonElement;  // Кнопка действия (опционально)
-- protected _index?: HTMLElement;  // Индекс в корзине (опционально)
-- protected _description?: HTMLElement;  // Описание товара (опционально)
-- protected _deleteButton?: HTMLButtonElement;  // Кнопка удаления (опционально)
+- _title: HTMLElement // Заголовок товара.
+- _price: HTMLElement // Цена товара.
+- _button?: HTMLButtonElement // Кнопка "В корзину" или удаления.
 
 Конструктор:
 
-- constructor(container: HTMLElement, actions?: ICardActions)  // Инициализирует DOM-элементы карточки;
+- constructor(container: HTMLElement, actions?: ICardActions) // Принимает контейнер и обработчики событий.
 
-Геттер:
+Методы:
 
-- get containerElement()  // Возвращает контейнер карточки;
-
-Сеттеры:
-
-- set id(value: string)  // Устанавливает ID карточки в data-атрибут
-- set title(value: string)  // Устанавливает заголовок
-- set price(value: number | null)  // Устанавливает цену (или "Бесценно")
-- set category(value: Category | undefined)  // Устанавливает категорию с соответствующим CSS-классом
-- set image(value: string | undefined)  // Устанавливает изображение
-- set index(value: number | undefined)  // Устанавливает индекс в корзине
-- set description(value: string | undefined)  // Устанавливает описание
+- set price(value: number | null) // Обновляет цену и состояние кнопки.
+- set inCart(value: boolean) // Меняет состояние кнопки при добавлении в корзину.
 
 ### class Order extends Component`<IOrderForm>` `(src/components/Order.ts)`
 
@@ -410,10 +381,8 @@ interface ICardActions {
 
 Свойства:
 
-- protected _submitButton: HTMLButtonElement  // Кнопка отправки формы
-- protected _errors: HTMLElement  // Контейнер для отображения ошибок
-- protected _paymentButtons: NodeListOf`<HTMLButtonElement>`  // Кнопки выбора способа оплаты
-- protected _addressInput: HTMLInputElement - Поле ввода адреса
+- _paymentButtons: HTMLButtonElement[] // Кнопки выбора способа оплаты.
+- _addressInput: HTMLInputElement // Поле ввода адреса.
 
 Метод:
 
@@ -427,8 +396,28 @@ interface ICardActions {
 
 - set address(value: string)  // Устанавливает значение поля адреса
 - set payment(value: string)  // Устанавливает активный способ оплаты
+- resetPayment(): void // Сбрасывает выбор оплаты.
+- updateForm(): void // Валидирует форму.
 - set errors(value: string)  // Устанавливает текст ошибок
 - set valid(value: boolean)  // Управляет состоянием кнопки отправки (активна/неактивна)
+
+### Contacts (src/components/Contacts.ts)
+
+Форма ввода контактных данных (email, телефон).
+
+Свойства:
+
+- _emailInput: HTMLInputElement
+- _phoneInput: HTMLInputElement
+
+Конструктор:
+
+- onstructor(container: HTMLFormElement, events: IEvents)
+
+Методы:
+
+- validateEmail(): boolean  // Валидация адреса электронной почты
+- validatePhone(): boolean  // Валидация номера телефона
 
 ```
 interface IPage {
@@ -451,13 +440,16 @@ interface IPage {
 
 Конструктор:
 
-- constructor(container: HTMLElement, protected events: IEvents)  // Инициализирует элементы DOM
+- constructor(appData: AppData, events: IEvents, template: HTMLTemplateElement, container: HTMLElement)  // Инициализирует элементы DOM
+
+Методы:
+
+- render(): void // Отрисовывает каталог товаров.
 
 Сеттеры:
 
 - set counter(value: number)  // Устанавливает значение счетчика корзины
 - set catalog(items: HTMLElement[])  // Обновляет содержимое каталога
-- set locked(value: boolean)  // Блокирует/разблокирует страницу
 
 ## 6. PRESENTER `(src/index.ts)`
 
@@ -465,19 +457,33 @@ interface IPage {
 
 ### События
 
-| Событие             | Описание                               |  Функция            |
-|---------------------|----------------------------------------|---------------------|
-| Слой Model          |                                        |                     |
-| `'DOMContentLoaded'`|  `Загружает товары с сервера`          | `api.getProducts()` |
-| Слой View           |                                        |                     |
-| `'showPreview'`     | `Открывает карточку товара`            | `showPreview()`     |
-| `'addToCart'`       | `Добавляет товар в корзину`            | `addToCart()`       |
-| `'modal.close'`     | `Закрыть модальное окно`               | `showPreview()`     |
-| `'basket:open'`     | `Открывает модальное окно с корзиной`  | `events.on()`       |
-| `'removeFromCart'`  | `Удаляет товар из корзины`             | `removeFromCart()`  |
-| `'order:open'`      | `Открывает форму заказа`               | `initOrder()`       |
-| `'order:submit'`    | `Открывает форму контактов`            | `initContacts()`    |
-| `'showSuccess'`     | `Заказ успешно оформлен`               | `showSuccess()`     |
+| События VIEW                                                      |
+| ------------------------------------------------------------------|
+| `preview:open` - пользователь открывает карточку товара           |
+| `product:add` - пользователь добавляет товар в корзину            |
+| `basket:open` - пользователь открывает корзину                    |
+| `basket:remove` - пользователь удаляет товар из корзины           |
+| `order:start` - пользователь начинает оформление заказа           |
+| `contacts:open` - пользователь переходит к вводу контактных данных|
+| `modal:open / modal:close` - Открытие/закрытие модальных окон     |
+
+| События MODEL                                                     |
+| ------------------------------------------------------------------|
+| `cart:changed` - изменилось содержимое корзины                    |
+| `order:submit` - пользователь подтвердил способ оплаты и адрес    |
+| `contacts:submit` - пользователь подтвердил контактные данные     |
+| `order:complete` - заказ успешно оформлен                         |
+
+### Cхема взаимодействия
+
+|Пользователь (VIEW)       |          Данные (MODEL)                       |
+|--------------------------|-----------------------------------------------|
+|Клик → `preview:open`     | → Модель получает данные товара               |
+|Клик → `product:add`      | → Модель обновляет корзину → `cart:changed`   |
+|Клик → `basket:remove`    | → Модель обновляет корзину → `cart:changed`   |
+|Клик → `order:start`      | → Модель инициализирует заказ                 |
+|Клик → `order:submit`     | → Модель сохраняет оплату и адрес             |
+|Клик → `contacts:submit`  | → Модель сохраняет контакты → `order:complete`|
 
 ## 7. Сервисы
 
@@ -494,49 +500,7 @@ interface IPage {
 - async getProductList(): Promise`<IProduct[]>`  // Получает список товаров
 - async createOrder(order: IOrderData): Promise`<{ id: string }>`  // Отправляет заказ на сервер
 
-## 8. Поток данных
-
-### Инициализация
-
-- Page -> (запрос) -> LarekAPI -> (ответ) -> AppData;
-- AppData обновляет состояние -> Page отображает товары;
-
-### Добавление в корзину
-
-- ProductCard (click) -> EventEmitter -> AppData;
-- AppData обновляет cart -> Basket (через EventEmitter);
-
-### Оформление заказа
-
-- OrderForm (submit) -> EventEmitter -> AppData;
-- AppData -> LarekAPI -> Success/Error;
-
-## 9. Взаимодействие компонентов
-
-Пользователь взаимодействует с View;
-View генерирует события через EventEmitter;
-Presenter обрабатывает события и обновляет Model;
-Model уведомляет об изменениях через EventEmitter;
-
-### Инициализация приложения
-
-AppData - загружает товары через LarekAPI;
-Page - отображает каталог товаров;
-Basket - инициализируется пустой корзиной;
-
-### Добавление товара в корзину
-
-ProductCard генерирует событие 'card:select';
-AppData обновляет состояние корзины;
-Page обновляет счетчик товаров;
-
-### Оформление заказa
-
-Basket генерирует событие 'order:open';
-OrderForm отображает форму ввода данных;
-При успешном заполнении отправляет данные через LarekAPI;
-
-## 10. API взаимодействие с сервером
+## 8. API взаимодействие с сервером
 
 | Метод    | Эндпоинт         | Описание                                                      |
 |----------|------------------|---------------------------------------------------------------|
@@ -547,7 +511,7 @@ OrderForm отображает форму ввода данных;
 
 ### Типы данных для взаимодействия с сервером
 
-#### Данные Товара:
+#### Данные Товара
 
 - id: string;
 - title: string;
@@ -557,7 +521,7 @@ OrderForm отображает форму ввода данных;
 - image?: string;
 - index?: number;
 
-#### Данные для оформления заказа:
+#### Данные для оформления заказа
 
 - payment: string;
 - address: string;

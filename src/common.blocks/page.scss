@@ -1,6 +1,7 @@
-@use "variables" as *;
+@use 'variables' as *;
 
-html, body.page {
+html,
+body.page {
 	height: 100%;
 	font-family: $font;
 	font-size: $baseFontSize;
@@ -17,11 +18,11 @@ html, body.page {
 }
 
 .error-message {
-    padding: 20px;
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-    border-radius: 4px;
-    margin: 20px;
-    text-align: center;
+	padding: 20px;
+	background: #ffebee;
+	color: #c62828;
+	border: 1px solid #ef9a9a;
+	border-radius: 4px;
+	margin: 20px;
+	text-align: center;
 }

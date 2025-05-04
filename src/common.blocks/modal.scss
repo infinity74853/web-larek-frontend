@@ -1,81 +1,80 @@
-@use "variables" as *;
-@use "mixins";
+@use 'variables' as *;
+@use 'mixins';
 
 .modal {
-  @include mixins.sublayer;
-  // height: max-content;
-  position: fixed;
-  visibility: hidden;
-  opacity: 0;
-  justify-content: center;
-  background-color: $overlayBackground;
-  z-index: 100;
-  padding-top: 5vh;
-  padding-bottom: 5vh;
-  box-sizing: border-box;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+	@include mixins.sublayer;
+	// height: max-content;
+	position: fixed;
+	visibility: hidden;
+	opacity: 0;
+	justify-content: center;
+	background-color: $overlayBackground;
+	z-index: 100;
+	padding-top: 5vh;
+	padding-bottom: 5vh;
+	box-sizing: border-box;
+	transition: opacity 0.3s ease, visibility 0.3s ease;
 
-  &_active {
-    visibility: visible;
-    opacity: 1;
-    overflow-y: auto;
-  }
+	&_active {
+		visibility: visible;
+		opacity: 1;
+		overflow-y: auto;
+	}
 
-  &__container {
-    @include mixins.container;
-    @include mixins.flex(column);
-    gap: $defaultPadding;
-    background-color: $background;
-    // min-height: 90vmin;
-    border-radius: 3rem;
-    box-sizing: border-box;
-    position: relative;
-  }
+	&__container {
+		@include mixins.container;
+		@include mixins.flex(column);
+		gap: $defaultPadding;
+		background-color: $background;
+		// min-height: 90vmin;
+		border-radius: 3rem;
+		box-sizing: border-box;
+		position: relative;
+	}
 
-  &__content {
-    flex-grow: 1;
-  }
+	&__content {
+		flex-grow: 1;
+	}
 
-  &__title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 400;
-  }
+	&__title {
+		margin: 0;
+		font-size: 1.5rem;
+		font-weight: 400;
+	}
 
-  &__actions {
-    @include mixins.flex(row);
-    align-items: center;
-    gap: 2rem;
-  }
+	&__actions {
+		@include mixins.flex(row);
+		align-items: center;
+		gap: 2rem;
+	}
 
-  &__open {
-    padding-right: calc(100vw - 100%);
-    overflow-y: scroll;
-  }
+	&__open {
+		padding-right: calc(100vw - 100%);
+		overflow-y: scroll;
+	}
 
-  &__close {
-    position: absolute;
-    top: calc(#{$defaultPadding} / 2);
-    right: calc(#{$defaultPadding} / 2);
-    @include mixins.icon(2rem, 'close');
-    @include mixins.link(white, $hover);
-  }
+	&__close {
+		position: absolute;
+		top: calc(#{$defaultPadding} / 2);
+		right: calc(#{$defaultPadding} / 2);
+		@include mixins.icon(2rem, 'close');
+		@include mixins.link(white, $hover);
+	}
 
-  &__footer {
-    @include mixins.flex(row);
-    align-items: center;
-    gap: 2rem;
-  }
+	&__footer {
+		@include mixins.flex(row);
+		align-items: center;
+		gap: 2rem;
+	}
 
-  &__message {
-    white-space:nowrap;
-    max-width: 60%;
-    text-overflow: ellipsis;
-    overflow: hidden;
+	&__message {
+		white-space: nowrap;
+		max-width: 60%;
+		text-overflow: ellipsis;
+		overflow: hidden;
 
-    &_error {
-      color: $error;
-    }
-  }
+		&_error {
+			color: $error;
+		}
+	}
 }
-
