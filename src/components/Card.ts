@@ -109,8 +109,4 @@ export class Card extends Component<ICard> {
 	set image(value: string | undefined) {
 		this.setImage('.card__image', value || '', this._title.textContent || '');
 	}
-
-	set quantity(value: number) {
-		this.setText('.basket__item-counter', `× ${value}`);
-	}
 }

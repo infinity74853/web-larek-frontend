@@ -34,7 +34,6 @@ const modal = new Modal(
 );
 const appData = new AppData(events);
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const page = new Page(
 	appData,
 	events,
