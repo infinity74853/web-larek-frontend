@@ -13,9 +13,7 @@ export class Basket extends Component<HTMLElement> {
 
 	constructor(
 		container: HTMLElement,
-		protected events: IEvents,
-		private appData: AppData,
-		private cardBasketTemplate: HTMLTemplateElement
+		protected events: IEvents,		
 	) {
 		super(container);
 		this._title = ensureElement<HTMLElement>('.basket__title', this.container);
@@ -26,35 +24,21 @@ export class Basket extends Component<HTMLElement> {
 			this.container
 		);
 		this.initialize();
-		this.updateBasket();
+		//this.updateBasket();	
 	}
 
 	private initialize() {
-		this.events.on('cart:changed', () => this.updateBasket());
 		this._button.addEventListener('click', () => {
-			this.events.emit('order:start');
+		  this.events.emit('order:start');
 		});
 	}
 
-	private updateBasket() {
+	public updateBasket(items: HTMLElement[], total: number) {
 		this._title.textContent = settings.labels.cartList;
 		this._list.innerHTML = '';
-		this.appData.cart.forEach((item, index) => {
-			const card = new Card(cloneTemplate(this.cardBasketTemplate), {
-				onClick: () => this.appData.removeFromCart(item.id),
-			});
+		items.forEach(item => this._list.appendChild(item));
+		this._total.textContent = `${total} синапсов`;
 
-			card.render({
-				id: item.id,
-				title: item.title,
-				price: item.price,
-				index: index + 1,
-			});
-
-			this._list.appendChild(card.getContainer());
-		});
-
-		this._total.textContent = `${this.appData.getCartTotal()} синапсов`;
-		this.setDisabled(this._button, this.appData.cart.length === 0);
+		this.setDisabled(this._button, items.length === 0);
 	}
 }

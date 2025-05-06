@@ -73,10 +73,10 @@ export class AppData {
 		}
 	}
 
-	getCartTotal(): number {
+	public getCartTotal(): number {
 		return this._cart.reduce(
-			(sum, item) => sum + item.price * item.quantity,
-			0
+		  (sum, item) => sum + item.price * item.quantity, 
+		  0
 		);
 	}
 

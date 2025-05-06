@@ -27,30 +27,15 @@ const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 
 // Инициализация компонентов
 const events = new EventEmitter();
-const modal = new Modal(
-	ensureElement<HTMLElement>('#modal-container'),
-	events,
-	ensureElement<HTMLTemplateElement>('#success')
-);
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'),	events,	ensureElement<HTMLTemplateElement>('#success'));
 const appData = new AppData(events);
+const basket = new Basket(cloneTemplate(basketTemplate), events);
+events.emit('cart:changed');
 
-const page = new Page(
-	appData,
-	events,
-	cardCatalogTemplate,
-	ensureElement('#app-container')
-);
+const page = new Page( appData,	events,	cardCatalogTemplate, ensureElement('#app-container'));
 
-api.getProducts().then((products) => {
-	appData.setCatalog(products);
-});
+api.getProducts().then((products) => {	appData.setCatalog(products);});
 
-const basket = new Basket(
-	cloneTemplate(basketTemplate),
-	events,
-	appData,
-	cardBasketTemplate
-);
 const basketCounter = ensureElement('.header__basket-counter');
 const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
@@ -60,6 +45,22 @@ events.on('modal:set-data', (product: Product) => {
 });
 
 events.on('cart:changed', () => {
+	const basketItems = appData.cart.map((item, index) => {
+	  const card = new Card(cloneTemplate(cardBasketTemplate), {
+		onClick: () => events.emit('basket:remove', { id: item.id })
+	  });
+  
+	  card.render({
+		id: item.id,
+		title: item.title,
+		price: item.price,
+		index: index + 1,
+	  });
+  
+	  return card.getContainer();
+	});
+  
+	basket.updateBasket(basketItems, appData.getCartTotal());
 	basketCounter.textContent = String(appData.cart.length);
 });
 
@@ -97,8 +98,9 @@ basketButton.addEventListener('click', () => events.emit('basket:open'));
 
 // Клик по корзине
 events.on('basket:open', () => {
+	events.emit('cart:changed'); // Добавляем принудительное обновление
 	modal.open(basket.render());
-});
+  });
 
 // Обработчик удаления из корзины
 events.on('basket:remove', (event: { id: string }) => {
