@@ -10,7 +10,7 @@ import { Page } from './components/Page';
 import { Card } from './components/Card';
 import { Product, IOrderForm, IContactsForm } from './types';
 import { Contacts } from './components/Contacts';
-import { API_URL, CDN_URL } from './utils/constants';
+import { settings, API_URL, CDN_URL } from './utils/constants';
 import { ensureElement, cloneTemplate } from './utils/utils';
 import { Success } from './components/common/Success';
 
@@ -27,17 +27,24 @@ const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 
 // Инициализация компонентов
 const events = new EventEmitter();
-const modal = new Modal(ensureElement<HTMLElement>('#modal-container'),	events,	ensureElement<HTMLTemplateElement>('#success'));
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'),	events);
 const appData = new AppData(events);
+const page = new Page(events, cardCatalogTemplate, ensureElement('#app-container'));
 const basket = new Basket(cloneTemplate(basketTemplate), events);
+const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 events.emit('cart:changed');
 
-const page = new Page( appData,	events,	cardCatalogTemplate, ensureElement('#app-container'));
+
 
 api.getProducts().then((products) => {	appData.setCatalog(products);});
 
 const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
+
+// Подписки на события
+events.on('catalog:changed', () => {
+    page.renderCatalog(appData.products, appData.getCartIds());
+});
 
 // Обработчик изменений поля email
 events.on('contacts:email:change', (event: { value: string }) => {
@@ -54,6 +61,10 @@ events.on('modal:set-data', (product: Product) => {
 });
 
 events.on('cart:changed', () => {
+    // Обновляем счетчик
+    page.updateBasketCounter(appData.cart.length);
+    
+    // Обновляем корзину
     const basketItems = appData.cart.map((item, index) => {
         const card = new Card(cloneTemplate(cardBasketTemplate), {
             onClick: () => events.emit('basket:remove', { productId: item.productId })
@@ -70,6 +81,9 @@ events.on('cart:changed', () => {
     });
     
     basket.updateBasket(basketItems, appData.getCartTotal());
+    
+    // Обновляем каталог
+    events.emit('catalog:changed');
 });
 
 events.on('product:add', (product: Product) => {
@@ -81,10 +95,16 @@ events.on('product:add', (product: Product) => {
 });
 
 events.on('card:update', (data: { id: string; inCart: boolean }) => {
-    const card = page.getCard(data.id);
-    if (card) {
-        card.inCart = data.inCart;
-    }
+    const buttons = document.querySelectorAll<HTMLButtonElement>(
+        `[data-id="${data.id}"] .card__button`
+    );
+    
+    buttons.forEach(button => {
+        button.disabled = data.inCart;
+        button.textContent = data.inCart
+            ? settings.labels.inCart
+            : settings.labels.addToCart;
+    });
 });
 
 events.on('preview:open', (product: Product) => {
@@ -92,15 +112,11 @@ events.on('preview:open', (product: Product) => {
         onClick: () => events.emit('product:add', product),
     });
 
-    // Добавляем подписку на обновления состояния
-    events.on('card:update', (data: { id: string; inCart: boolean }) => {
-        if (data.id === product.id) {
-            previewCard.updateCartState(data.inCart);
-        }
+    previewCard.render({
+        ...product,
+        inCart: appData.isInCart(product.id)
     });
 
-    previewCard.render(product);
-    previewCard.inCart = appData.isInCart(product.id);
     modal.open(previewCard.getContainer());
 });
 
@@ -146,11 +162,18 @@ events.on('contacts:open', () => {
 
 // Обработчик отправки контактов
 events.on('contacts:submit', (data: IContactsForm) => {
-	appData.updateOrderField('email', data.email);
-	appData.updateOrderField('phone', data.phone);
+    appData.updateOrderField('email', data.email);
+    appData.updateOrderField('phone', data.phone);
 
-	appData.clearCart();
-	modal.renderSuccess(appData.order.total);
+    // Создаем экземпляр Success
+    const successComponent = new Success(cloneTemplate(successTemplate), {
+        onClick: () => events.emit('modal:close'),
+    });
+    
+    successComponent.total = appData.order?.total || 0;
+    modal.open(successComponent.getContainer());
+    
+    appData.clearCart();
 });
 
 events.on('order:complete', () => {

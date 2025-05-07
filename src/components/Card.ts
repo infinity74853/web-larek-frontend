@@ -12,9 +12,7 @@ export class Card extends Component<ICard> {
 	protected _priceElement: HTMLElement;
 	protected _category?: HTMLElement;
 	protected _button?: HTMLButtonElement;
-	protected _inCart = false;
-	protected _currentPrice: number | null = null;
-
+	
 	constructor(container: HTMLElement, actions?: ICardActions) {
 		super(container);
 
@@ -44,35 +42,36 @@ export class Card extends Component<ICard> {
 		}
 	}
 
-	set inCart(value: boolean) {
-		this._inCart = value;
-		this.updateButtonState();
-	}
+	private updateButtonState(inCart: boolean, price: number | null) {
+        if (!this._button) return;
+    
+        const isBasketButton = this._button.classList.contains('basket__item-delete');
+        
+        if (isBasketButton) {
+            this._button.textContent = settings.labels.deleteFromCart;
+            this.setDisabled(this._button, false);
+        } else {
+            const disabled = inCart || price === null;
+            this.setDisabled(this._button, disabled);
+            this._button.textContent = inCart
+                ? settings.labels.inCart
+                : price === null
+                ? settings.labels.notForSale
+                : settings.labels.addToCart;
+        }
+    }
 
-	private updateButtonState() {
-		if (!this._button) return;
-	
-		const isBasketButton = this._button.classList.contains('basket__item-delete');
-		
-		if (isBasketButton) {
-			// Для кнопки удаления в корзине
-			this._button.textContent = settings.labels.deleteFromCart;
-			this.setDisabled(this._button, false); // Всегда активна
-		} else {
-			// Для обычной кнопки добавления
-			const disabled = this._inCart || this._currentPrice === null;
-			this.setDisabled(this._button, disabled);
-			this._button.textContent = this._inCart
-				? settings.labels.inCart
-				: this._currentPrice === null
-				? settings.labels.notForSale
-				: settings.labels.addToCart;
-		}
-	}
+	render(data: ICard & { inCart?: boolean; price?: number | null }) {
+        super.render(data);
+        
+        // Обновление кнопки
+        this.updateButtonState(
+            data.inCart || false,
+            data.price ?? null
+        );
 
-	public updateCartState(inCart: boolean) {
-		this.inCart = inCart;
-	}
+        return this.container;
+    }
 
 	set id(value: string) {
 		this.container.dataset.id = value;
@@ -91,13 +90,11 @@ export class Card extends Component<ICard> {
 	}
 
 	set price(value: number | null) {
-		this._currentPrice = value;
-		this.setText(
-			'.card__price',
-			value ? `${value} ${settings.labels.currency}` : settings.labels.priceless
-		);
-		this.updateButtonState();
-	}
+        this.setText(
+            '.card__price',
+            value ? `${value} ${settings.labels.currency}` : settings.labels.priceless
+        );
+    }
 
 	set category(value: Category | undefined) {
 		if (this._category && value) {

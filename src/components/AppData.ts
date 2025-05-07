@@ -10,6 +10,10 @@ export class AppData {
 
 	constructor(protected events: IEvents) {}
 
+	getCartIds(): string[] {
+        return this._cart.map(item => item.productId);
+    }
+
 	// Обновление полей заказа
 	updateOrderField<K extends keyof IOrderData>(field: K, value: IOrderData[K]) {
         if (!this._order) this.initOrder();

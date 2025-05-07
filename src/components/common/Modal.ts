@@ -1,22 +1,18 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
 import { Product } from '../../types';
-import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { ensureElement } from '../../utils/utils';
 
 export class Modal extends Component<HTMLElement> {
 	protected _closeButton: HTMLButtonElement;
 	protected _content: HTMLElement;
-	protected _isOpened = false;
-	protected successTemplate: HTMLTemplateElement;
 	private _handleKeyDown: (event: KeyboardEvent) => void;
 
 	constructor(
 		container: HTMLElement,
-		protected events: IEvents,
-		successTemplate: HTMLTemplateElement
+		protected events: IEvents,		
 	) {
 		super(container);
-		this.successTemplate = successTemplate;
 		this._closeButton = ensureElement<HTMLButtonElement>(
 			'.modal__close',
 			container
@@ -44,6 +40,7 @@ export class Modal extends Component<HTMLElement> {
 	}
 
 	open(content?: HTMLElement) {
+		if (this.isActive()) return;
 		if (content) {
 			this.content = content;
 		}
@@ -53,19 +50,13 @@ export class Modal extends Component<HTMLElement> {
 	}
 
 	close() {
+		if (!this.isActive()) return;
 		this.removeClass('modal_active');
 		document.removeEventListener('keydown', this._handleKeyDown);
 		this.events.emit('modal:close');
 	}
-
-	get isOpened(): boolean {
-		return this._isOpened;
-	}
-
-	renderSuccess(total: number) {
-		const successTemplate = cloneTemplate(this.successTemplate);
-		this.setText('.order-success__description', `Списано ${total} синапсов`);
-		this.content = successTemplate;
-		this.open();
-	}
+	
+	private isActive(): boolean {
+        return this.container.classList.contains('modal_active');
+    }
 }

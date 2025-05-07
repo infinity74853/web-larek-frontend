@@ -28,16 +28,20 @@ export class Basket extends Component<HTMLElement> {
 		this._button.addEventListener('click', () => {
 		  this.events.emit('order:start');
 		});
-	}
-
-	
+	}	
 
 	public updateBasket(items: HTMLElement[], total: number) {
-		this._title.textContent = settings.labels.cartList;
-		this._list.innerHTML = '';
-		items.forEach(item => this._list.appendChild(item));
-		this._total.textContent = `${total} синапсов`;
+        this._list.innerHTML = '';
+        items.forEach(item => this._list.appendChild(item));
+        this.setTotal(total);
+        this.toggleButton(items.length === 0); // Используем новый метод
+    }
 
-		this.setDisabled(this._button, items.length === 0);		
-	}
+    private setTotal(value: number) {
+        this.setText('.basket__price', `${value} ${settings.labels.currency}`);
+    }
+    
+    private toggleButton(disabled: boolean) {
+        this.setDisabled(this._button, disabled);
+    }
 }
