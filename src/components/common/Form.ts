@@ -23,7 +23,7 @@ export abstract class FormComponent<T> extends Component<T> {
 		);
 	}
 
-	// Общий метод для отображения ошибок
+	// Mетод для отображения ошибок
 	protected showErrors(errors: string[]): void {
 		this._errorContainer.textContent = errors.join('; ');
 		this._errorContainer.style.display = errors.length ? 'block' : 'none';

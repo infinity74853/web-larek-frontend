@@ -22,21 +22,20 @@ export interface IOrderData extends IOrderForm {
 	total: number;
 }
 export interface ICartItem {
-	id: string;
 	productId: string;
-	quantity: number;
+	
 	price: number;
 	title: string;
 }
 export interface ICard {
-	id?: string;
-	title: string;
-	price: number | null;
-	category?: Category;
-	description?: string;
-	image?: string;
-	index?: number;
-	productId?: string;
+    id?: string;
+    title?: string;
+    price?: number;
+    category?: string;
+    image?: string;
+    description?: string;
+    index?: number;
+    inCart?: boolean;
 }
 
 export type Category =

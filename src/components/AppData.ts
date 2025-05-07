@@ -25,13 +25,13 @@ export class AppData {
 			address: '',
 			email: '',
 			phone: '',
-			items: this._cart.map((item) => item.id),
+			items: this._cart.map((item) => item.productId),
 			total: this.getCartTotal(),
 		};
 		this.events.emit('order:init', this._order);
 	}
 
-	// Добавляем/изменяем методы валидации
+	// Методы валидации
     private validateForm(): void {
         const errors: FormErrors = {};
         const order = this._order;
@@ -85,56 +85,40 @@ export class AppData {
 
 	// Добавление в корзину
 	addToCart(product: Product): void {
-		if (!this.isInCart(product.id)) {
-			this._cart.push({
-				id: this.generateUID(),
-				productId: product.id,
-				quantity: 1,
-				price: product.price || 0,
-				title: product.title,
-			});
-			this.events.emit('cart:changed', this._cart);
-			this.events.emit('card:update', { id: product.id, inCart: true });
-		}
-	}
+        if (!this.isInCart(product.id)) {
+            this._cart.push({
+                productId: product.id,
+                price: product.price || 0,
+                title: product.title,
+            });
+            this.events.emit('cart:changed', this._cart);
+            this.events.emit('card:update', { 
+                id: product.id, 
+                inCart: true 
+            });
+        }
+    }
+       
+    getCartTotal(): number {
+        return this._cart.reduce((sum, item) => sum + item.price, 0);
+    }
 
-	removeFromCart(id: string): void {
-		const item = this._cart.find((item) => item.id === id);
-		if (item) {
-			this._cart = this._cart.filter((item) => item.id !== id);
-			this.events.emit('cart:changed', this._cart);
-			this.events.emit('card:update', {
-				id: item.productId,
-				inCart: this.isInCart(item.productId),
-			});
-		}
-	}
+	removeFromCart(productId: string): void {
+        this._cart = this._cart.filter(item => item.productId !== productId);
+        this.events.emit('cart:changed', this._cart);
+        this.events.emit('card:update', {
+            id: productId,
+            inCart: this.isInCart(productId)
+        });
+    }
 
-	public getCartTotal(): number {
-		return this._cart.reduce(
-		  (sum, item) => sum + item.price * item.quantity, 
-		  0
-		);
-	}
-
+	
 	clearCart(): void {
 		this._cart = [];
 		this.events.emit('cart:changed', this._cart);
 	}
 
-	private generateUID(): string {
-		return Date.now().toString(36) + Math.random().toString(36).substr(2);
-	}
-
 	isInCart(productId: string): boolean {
 		return this._cart.some((item) => item.productId === productId);
-	}
-
-	updateCartItem(id: string, quantity: number): void {
-		const item = this._cart.find((i) => i.id === id);
-		if (item) {
-			item.quantity = Math.max(1, quantity);
-			this.events.emit('cart:changed', this._cart);
-		}
-	}
+	}	
 }

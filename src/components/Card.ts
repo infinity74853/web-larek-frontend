@@ -22,7 +22,9 @@ export class Card extends Component<ICard> {
 		this._priceElement = ensureElement<HTMLElement>('.card__price', container);
 
 		this._category = container.querySelector('.card__category');
-		this._button = container.querySelector('.card__button');
+		this._button = container.querySelector<HTMLButtonElement>(
+			'.card__button, .basket__item-delete'
+		);
 
 		if (actions?.onClick) {
 			this._button?.addEventListener('click', (e) => {
@@ -49,14 +51,15 @@ export class Card extends Component<ICard> {
 
 	private updateButtonState() {
 		if (!this._button) return;
-
-		const isBasketButton = this._button.classList.contains(
-			'basket__item-delete'
-		);
-
+	
+		const isBasketButton = this._button.classList.contains('basket__item-delete');
+		
 		if (isBasketButton) {
-			this._button.textContent = '';
+			// Для кнопки удаления в корзине
+			this._button.textContent = settings.labels.deleteFromCart;
+			this.setDisabled(this._button, false); // Всегда активна
 		} else {
+			// Для обычной кнопки добавления
 			const disabled = this._inCart || this._currentPrice === null;
 			this.setDisabled(this._button, disabled);
 			this._button.textContent = this._inCart
@@ -67,14 +70,14 @@ export class Card extends Component<ICard> {
 		}
 	}
 
+	public updateCartState(inCart: boolean) {
+		this.inCart = inCart;
+	}
+
 	set id(value: string) {
 		this.container.dataset.id = value;
 	}
-
-	set uid(value: string) {
-		this.container.dataset.uid = value;
-	}
-
+	
 	set index(value: number) {
 		this.setText('.basket__item-index', String(value));
 	}

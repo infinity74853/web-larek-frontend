@@ -1,10 +1,11 @@
 import { AppData } from './AppData';
 import { Card } from './Card';
-import { cloneTemplate } from '../utils/utils';
+import { cloneTemplate, ensureElement } from '../utils/utils';
 import { IEvents } from './base/Events';
 
 export class Page {
 	private cards: Map<string, Card>;
+	private basketCounter: HTMLElement;
 
 	constructor(
 		private appData: AppData,
@@ -13,12 +14,25 @@ export class Page {
 		private appContainer: HTMLElement
 	) {
 		this.cards = new Map<string, Card>();
+		this.basketCounter = ensureElement('.header__basket-counter');
+
+		// Инициализация обработчика корзины
+        const basketButton = ensureElement('.header__basket');
+        basketButton.addEventListener('click', () => 
+            events.emit('basket:open')
+        );
+
 		this.events.on('catalog:changed', () => this.renderCatalog());
 		this.events.on('card:update', (data: { id: string }) => {
 			const card = this.cards.get(data.id);
 			card.inCart = this.appData.isInCart(data.id);
 		});
+		this.events.on('cart:changed', () => this.updateBasketCounter());
 	}
+
+	private updateBasketCounter() {
+        this.basketCounter.textContent = String(this.appData.cart.length);
+    }
 
 	public renderCatalog() {
 		this.cards.clear();
@@ -48,5 +62,9 @@ export class Page {
 		});
 
 		this.appContainer.appendChild(fragment);
+	}
+
+	public getCard(id: string): Card | undefined {
+		return this.cards.get(id);
 	}
 }

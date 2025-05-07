@@ -10,7 +10,7 @@ import { Page } from './components/Page';
 import { Card } from './components/Card';
 import { Product, IOrderForm, IContactsForm } from './types';
 import { Contacts } from './components/Contacts';
-import { settings, API_URL, CDN_URL } from './utils/constants';
+import { API_URL, CDN_URL } from './utils/constants';
 import { ensureElement, cloneTemplate } from './utils/utils';
 import { Success } from './components/common/Success';
 
@@ -36,7 +36,6 @@ const page = new Page( appData,	events,	cardCatalogTemplate, ensureElement('#app
 
 api.getProducts().then((products) => {	appData.setCatalog(products);});
 
-const basketCounter = ensureElement('.header__basket-counter');
 const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
 
@@ -55,71 +54,65 @@ events.on('modal:set-data', (product: Product) => {
 });
 
 events.on('cart:changed', () => {
-	const basketItems = appData.cart.map((item, index) => {
-	  const card = new Card(cloneTemplate(cardBasketTemplate), {
-		onClick: () => events.emit('basket:remove', { id: item.id })
-	  });
-  
-	  card.render({
-		id: item.id,
-		title: item.title,
-		price: item.price,
-		index: index + 1,
-	  });
-  
-	  return card.getContainer();
-	});
-  
-	basket.updateBasket(basketItems, appData.getCartTotal());
-	basketCounter.textContent = String(appData.cart.length);
+    const basketItems = appData.cart.map((item, index) => {
+        const card = new Card(cloneTemplate(cardBasketTemplate), {
+            onClick: () => events.emit('basket:remove', { productId: item.productId })
+        });
+        
+        card.render({
+            id: item.productId,
+            title: item.title,
+            price: item.price,
+            index: index + 1
+        });
+        
+        return card.getContainer();
+    });
+    
+    basket.updateBasket(basketItems, appData.getCartTotal());
 });
 
 events.on('product:add', (product: Product) => {
 	appData.addToCart(product);
+	events.emit('card:update', { 
+        id: product.id, 
+        inCart: true 
+    });
 });
 
 events.on('card:update', (data: { id: string; inCart: boolean }) => {
-	const selector = `
-        [data-id="${data.id}"] .card__button,
-        [data-product-id="${data.id}"] .card__button
-    `;
-
-	document.querySelectorAll<HTMLButtonElement>(selector).forEach((button) => {
-		button.disabled = data.inCart;
-		button.textContent = data.inCart
-			? settings.labels.inCart
-			: settings.labels.addToCart;
-	});
+    const card = page.getCard(data.id);
+    if (card) {
+        card.inCart = data.inCart;
+    }
 });
 
 events.on('preview:open', (product: Product) => {
-	const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
-		onClick: () => events.emit('product:add', product),
-	});
+    const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
+        onClick: () => events.emit('product:add', product),
+    });
 
-	previewCard.render(product);
-	previewCard.inCart = appData.isInCart(product.id);
-	modal.open(previewCard.getContainer());
+    // Добавляем подписку на обновления состояния
+    events.on('card:update', (data: { id: string; inCart: boolean }) => {
+        if (data.id === product.id) {
+            previewCard.updateCartState(data.inCart);
+        }
+    });
+
+    previewCard.render(product);
+    previewCard.inCart = appData.isInCart(product.id);
+    modal.open(previewCard.getContainer());
 });
-
-// Инициализация корзины
-const basketButton = ensureElement('.header__basket');
-basketButton.addEventListener('click', () => events.emit('basket:open'));
 
 // Клик по корзине
 events.on('basket:open', () => {
-	events.emit('cart:changed'); // Добавляем принудительное обновление
+	events.emit('cart:changed');
 	modal.open(basket.render());
   });
 
 // Обработчик удаления из корзины
-events.on('basket:remove', (event: { id: string }) => {
-	appData.removeFromCart(event.id);
-});
-
-// Обработчик изменения количества
-events.on('basket:update', (event: { id: string; quantity: number }) => {
-	appData.updateCartItem(event.id, event.quantity);
+events.on('basket:remove', (event: { productId: string }) => {
+    appData.removeFromCart(event.productId);
 });
 
 // Оформление заказа

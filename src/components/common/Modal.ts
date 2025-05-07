@@ -23,7 +23,6 @@ export class Modal extends Component<HTMLElement> {
 		);
 		this._content = ensureElement<HTMLElement>('.modal__content', container);
 
-		// Инициализируем обработчик клавиатуры
 		this._handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'Escape') {
 				this.close();
@@ -35,7 +34,6 @@ export class Modal extends Component<HTMLElement> {
 		this._content.addEventListener('click', (e: Event) => e.stopPropagation());
 	}
 
-	// Метод для установки данных продукта
 	setProductData(product: Product): void {
 		this.setText('.modal__title', product.title);
 		this.setText('.modal__description', product.description || '');

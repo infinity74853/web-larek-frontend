@@ -21,8 +21,7 @@ export class Basket extends Component<HTMLElement> {
 			'.basket__button',
 			this.container
 		);
-		this.initialize();
-		//this.updateBasket();	
+		this.initialize();			
 	}
 
 	private initialize() {
@@ -30,6 +29,8 @@ export class Basket extends Component<HTMLElement> {
 		  this.events.emit('order:start');
 		});
 	}
+
+	
 
 	public updateBasket(items: HTMLElement[], total: number) {
 		this._title.textContent = settings.labels.cartList;
