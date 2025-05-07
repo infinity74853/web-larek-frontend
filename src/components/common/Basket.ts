@@ -1,7 +1,5 @@
 import { Component } from '../base/Component';
-import { AppData } from '../AppData';
-import { Card } from '../Card';
-import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
 import { settings } from '../../utils/constants';
 
@@ -39,6 +37,6 @@ export class Basket extends Component<HTMLElement> {
 		items.forEach(item => this._list.appendChild(item));
 		this._total.textContent = `${total} синапсов`;
 
-		this.setDisabled(this._button, items.length === 0);
+		this.setDisabled(this._button, items.length === 0);		
 	}
 }

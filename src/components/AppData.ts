@@ -1,5 +1,6 @@
 import { Product, ICartItem, IOrderData, FormErrors } from '../types';
 import { IEvents } from './base/Events';
+import { settings } from '../utils/constants';
 
 export class AppData {
 	private _products: Product[] = [];
@@ -11,10 +12,11 @@ export class AppData {
 
 	// Обновление полей заказа
 	updateOrderField<K extends keyof IOrderData>(field: K, value: IOrderData[K]) {
-		if (!this._order) this.initOrder();
-		this._order[field] = value;
-		this.events.emit('order:change', this._order);
-	}
+        if (!this._order) this.initOrder();
+        this._order[field] = value;
+        this.validateForm();
+        this.events.emit('order:change', this._order);
+    }
 
 	// Инициализация заказа
 	initOrder(): void {
@@ -28,6 +30,41 @@ export class AppData {
 		};
 		this.events.emit('order:init', this._order);
 	}
+
+	// Добавляем/изменяем методы валидации
+    private validateForm(): void {
+        const errors: FormErrors = {};
+        const order = this._order;
+
+        if (!order) return;
+
+        // Валидация адреса
+        if (!order.address || order.address.length < settings.validation.minAddressLength) {
+			errors.address = settings.errorMessages.order.addressInvalid;
+		}
+
+        // Валидация email
+        if (!order.email || !settings.validation.emailPattern.test(order.email)) {
+			errors.email = settings.errorMessages.contacts.emailInvalid;
+		}
+
+        // Валидация телефона
+        if (!order.phone || !settings.validation.phonePattern.test(order.phone)) {
+			errors.phone = settings.errorMessages.contacts.phoneInvalid;
+		}
+
+        // Валидация способа оплаты
+        if (!order.payment) {
+			errors.payment = settings.errorMessages.order.payment;
+		}
+
+        this._formErrors = errors;
+        this.events.emit('formErrors:change', this._formErrors);
+    }
+
+	get formErrors(): FormErrors {
+        return this._formErrors;
+    }
 
 	get order(): IOrderData | null {
 		return this._order;

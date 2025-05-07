@@ -40,6 +40,16 @@ const basketCounter = ensureElement('.header__basket-counter');
 const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
 
+// Обработчик изменений поля email
+events.on('contacts:email:change', (event: { value: string }) => {
+    appData.updateOrderField('email', event.value);
+});
+
+// Обработчик изменений поля телефон
+events.on('contacts:phone:change', (event: { value: string }) => {
+    appData.updateOrderField('phone', event.value);
+});
+
 events.on('modal:set-data', (product: Product) => {
 	modal.setProductData(product);
 });

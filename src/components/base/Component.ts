@@ -30,11 +30,13 @@ export abstract class Component<T> {
 		if (element) element.textContent = value;
 	}
 
-	setDisabled(element: HTMLElement, state: boolean): void {
-		state
-			? element.setAttribute('disabled', 'disabled')
-			: element.removeAttribute('disabled');
-	}
+	// Смена статуса блокировки
+    setDisabled(element: HTMLElement, state: boolean) {
+        if (element) {
+            if (state) element.setAttribute('disabled', 'disabled');
+            else element.removeAttribute('disabled');
+        }
+    }
 
 	protected setHidden(element: HTMLElement): void {
 		element.style.display = 'none';

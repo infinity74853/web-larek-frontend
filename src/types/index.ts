@@ -50,5 +50,10 @@ export interface IOrderResult {
 	id: string;
 	total: number;
 }
-
-export type FormErrors = Partial<Record<keyof IOrderData, string>>;
+export interface FormErrors {
+    payment?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+    [key: string]: string;
+}
