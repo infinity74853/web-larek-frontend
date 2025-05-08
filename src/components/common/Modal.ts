@@ -1,9 +1,11 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
-import { Product } from '../../types';
 import { ensureElement } from '../../utils/utils';
 
 export class Modal extends Component<HTMLElement> {
+    setProductData() {
+        throw new Error('Method not implemented.');
+    }
 	protected _closeButton: HTMLButtonElement;
 	protected _content: HTMLElement;
 	private _handleKeyDown: (event: KeyboardEvent) => void;
@@ -28,11 +30,6 @@ export class Modal extends Component<HTMLElement> {
 		this._closeButton.addEventListener('click', this.close.bind(this));
 		this.container.addEventListener('click', this.close.bind(this));
 		this._content.addEventListener('click', (e: Event) => e.stopPropagation());
-	}
-
-	setProductData(product: Product): void {
-		this.setText('.modal__title', product.title);
-		this.setText('.modal__description', product.description || '');
 	}
 
 	set content(value: HTMLElement) {

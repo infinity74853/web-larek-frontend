@@ -34,11 +34,11 @@ export class Basket extends Component<HTMLElement> {
         this._list.innerHTML = '';
         items.forEach(item => this._list.appendChild(item));
         this.setTotal(total);
-        this.toggleButton(items.length === 0); // Используем новый метод
-    }
+        this.toggleButton(items.length === 0);
+    }	
 
     private setTotal(value: number) {
-        this.setText('.basket__price', `${value} ${settings.labels.currency}`);
+        this.setText(this._total, `${value} ${settings.labels.currency}`);
     }
     
     private toggleButton(disabled: boolean) {

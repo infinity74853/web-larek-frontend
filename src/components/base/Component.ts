@@ -19,18 +19,20 @@ export abstract class Component<T> {
 		return this;
 	}
 
+    // Переключить класс
 	toggleClass(className: string, force?: boolean): this {
 		this.container.classList.toggle(className, force);
 		return this;
 	}
 
-	// Вспомогательные методы
-	protected setText(selector: string, value: string): void {
-		const element = this.container.querySelector(selector);
-		if (element) element.textContent = value;
-	}
+	// Установить текстовое содержимое
+    protected setText(element: HTMLElement, value: unknown) {
+        if (element) {
+            element.textContent = String(value);
+        }
+    }
 
-	// Смена статуса блокировки
+	// Сменить статус блокировки
     setDisabled(element: HTMLElement, state: boolean) {
         if (element) {
             if (state) element.setAttribute('disabled', 'disabled');
@@ -45,15 +47,18 @@ export abstract class Component<T> {
 	protected setVisible(element: HTMLElement): void {
 		element.style.removeProperty('display');
 	}
-
-	protected setImage(selector: string, src: string, alt = ''): void {
-		const image = this.container.querySelector<HTMLImageElement>(selector);
-		if (image) {
-			image.src = src;
-			image.alt = alt;
-		}
-	}
-
+    
+	// Установить изображение с алтернативным текстом
+	protected setImage(element: HTMLImageElement, src: string, alt?: string) {
+        if (element) {
+            element.src = src;
+            if (alt) {
+                element.alt = alt;
+            }
+        }
+    }
+	
+	// Вернуть корневой DOM-элемент
 	render(data?: Partial<T>): HTMLElement {
 		Object.assign(this as object, data ?? {});
 		return this.container;

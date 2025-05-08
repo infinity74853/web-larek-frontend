@@ -10,6 +10,11 @@ export class AppData {
 
 	constructor(protected events: IEvents) {}
 
+	setCatalog(products: Product[]): void {
+		this._products = products;
+		this.events.emit('catalog:changed', this._products);
+	}
+	
 	getCartIds(): string[] {
         return this._cart.map(item => item.productId);
     }
@@ -35,37 +40,6 @@ export class AppData {
 		this.events.emit('order:init', this._order);
 	}
 
-	// Методы валидации
-    private validateForm(): void {
-        const errors: FormErrors = {};
-        const order = this._order;
-
-        if (!order) return;
-
-        // Валидация адреса
-        if (!order.address || order.address.length < settings.validation.minAddressLength) {
-			errors.address = settings.errorMessages.order.addressInvalid;
-		}
-
-        // Валидация email
-        if (!order.email || !settings.validation.emailPattern.test(order.email)) {
-			errors.email = settings.errorMessages.contacts.emailInvalid;
-		}
-
-        // Валидация телефона
-        if (!order.phone || !settings.validation.phonePattern.test(order.phone)) {
-			errors.phone = settings.errorMessages.contacts.phoneInvalid;
-		}
-
-        // Валидация способа оплаты
-        if (!order.payment) {
-			errors.payment = settings.errorMessages.order.payment;
-		}
-
-        this._formErrors = errors;
-        this.events.emit('formErrors:change', this._formErrors);
-    }
-
 	get formErrors(): FormErrors {
         return this._formErrors;
     }
@@ -80,11 +54,6 @@ export class AppData {
 
 	get cart(): ICartItem[] {
 		return this._cart;
-	}
-
-	setCatalog(products: Product[]): void {
-		this._products = products;
-		this.events.emit('catalog:changed', this._products);
 	}
 
 	// Добавление в корзину
@@ -115,7 +84,6 @@ export class AppData {
             inCart: this.isInCart(productId)
         });
     }
-
 	
 	clearCart(): void {
 		this._cart = [];
@@ -124,5 +92,36 @@ export class AppData {
 
 	isInCart(productId: string): boolean {
 		return this._cart.some((item) => item.productId === productId);
-	}	
+	}
+	
+	// Методы валидации
+    private validateForm(): void {
+        const errors: FormErrors = {};
+        const order = this._order;
+
+        if (!order) return;
+
+        // Валидация адреса
+        if (!order.address || order.address.length < settings.validation.minAddressLength) {
+			errors.address = settings.errorMessages.order.addressInvalid;
+		}
+
+        // Валидация email
+        if (!order.email || !settings.validation.emailPattern.test(order.email)) {
+			errors.email = settings.errorMessages.contacts.emailInvalid;
+		}
+
+        // Валидация телефона
+        if (!order.phone || !settings.validation.phonePattern.test(order.phone)) {
+			errors.phone = settings.errorMessages.contacts.phoneInvalid;
+		}
+
+        // Валидация способа оплаты
+        if (!order.payment) {
+			errors.payment = settings.errorMessages.order.payment;
+		}
+
+        this._formErrors = errors;
+        this.events.emit('formErrors:change', this._formErrors);
+    }
 }

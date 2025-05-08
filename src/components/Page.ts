@@ -19,7 +19,7 @@ export class Page {
             events.emit('basket:open')
         );		
 	}
-
+    
 	public renderCatalog(products: Product[], cartIds: string[]) {
 		this.appContainer.innerHTML = '';
 		const fragment = document.createDocumentFragment();

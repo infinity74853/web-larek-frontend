@@ -11,7 +11,7 @@ import { Card } from './components/Card';
 import { Product, IOrderForm, IContactsForm } from './types';
 import { Contacts } from './components/Contacts';
 import { settings, API_URL, CDN_URL } from './utils/constants';
-import { ensureElement, cloneTemplate } from './utils/utils';
+import { ensureElement, cloneTemplate, ensureAllElements } from './utils/utils';
 import { Success } from './components/common/Success';
 
 // Инициализация API
@@ -34,10 +34,6 @@ const basket = new Basket(cloneTemplate(basketTemplate), events);
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 events.emit('cart:changed');
 
-
-
-api.getProducts().then((products) => {	appData.setCatalog(products);});
-
 const orderComponent = new Order(cloneTemplate(orderTemplate), events, appData);
 const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
 
@@ -54,10 +50,6 @@ events.on('contacts:email:change', (event: { value: string }) => {
 // Обработчик изменений поля телефон
 events.on('contacts:phone:change', (event: { value: string }) => {
     appData.updateOrderField('phone', event.value);
-});
-
-events.on('modal:set-data', (product: Product) => {
-	modal.setProductData(product);
 });
 
 events.on('cart:changed', () => {
@@ -95,9 +87,7 @@ events.on('product:add', (product: Product) => {
 });
 
 events.on('card:update', (data: { id: string; inCart: boolean }) => {
-    const buttons = document.querySelectorAll<HTMLButtonElement>(
-        `[data-id="${data.id}"] .card__button`
-    );
+    const buttons = ensureAllElements<HTMLButtonElement>(`[data-id="${data.id}"] .card__button`);
     
     buttons.forEach(button => {
         button.disabled = data.inCart;
@@ -203,3 +193,5 @@ events.on('modal:close', () => {
 	}
 	document.body.classList.remove('no-scroll');
 });
+
+api.getProducts().then((products) => {	appData.setCatalog(products);});

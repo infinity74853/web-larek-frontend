@@ -9,20 +9,24 @@ interface ICardActions {
 }
 export class Card extends Component<ICard> {
 	protected _title: HTMLElement;
-	protected _priceElement: HTMLElement;
+	protected _image: HTMLImageElement;
+	protected _price: HTMLElement;
+	protected _description?: HTMLElement; 
 	protected _category?: HTMLElement;
 	protected _button?: HTMLButtonElement;
-	
+	protected _index: HTMLElement;
+		
 	constructor(container: HTMLElement, actions?: ICardActions) {
 		super(container);
 
 		this._title = ensureElement<HTMLElement>('.card__title', container);
-		this._priceElement = ensureElement<HTMLElement>('.card__price', container);
-
-		this._category = container.querySelector('.card__category');
-		this._button = container.querySelector<HTMLButtonElement>(
-			'.card__button, .basket__item-delete'
-		);
+		this._price = ensureElement<HTMLElement>('.card__price', container);
+		
+		this._category = container.querySelector<HTMLElement>('.card__category');
+		this._button = container.querySelector<HTMLButtonElement>('.card__button, .basket__item-delete');
+		this._image = container.querySelector<HTMLImageElement>('.card__image');
+		this._description = container.querySelector<HTMLElement>('.card__description');
+		this._index = container.querySelector<HTMLElement>('.basket__item-index');
 
 		if (actions?.onClick) {
 			this._button?.addEventListener('click', (e) => {
@@ -48,16 +52,16 @@ export class Card extends Component<ICard> {
         const isBasketButton = this._button.classList.contains('basket__item-delete');
         
         if (isBasketButton) {
-            this._button.textContent = settings.labels.deleteFromCart;
+            this.setText(this._button, settings.labels.deleteFromCart);
             this.setDisabled(this._button, false);
         } else {
             const disabled = inCart || price === null;
             this.setDisabled(this._button, disabled);
-            this._button.textContent = inCart
-                ? settings.labels.inCart
-                : price === null
-                ? settings.labels.notForSale
-                : settings.labels.addToCart;
+            this.setText(this._button, 
+                inCart ? settings.labels.inCart :
+                price === null ? settings.labels.notForSale :
+                settings.labels.addToCart
+            );
         }
     }
 
@@ -77,28 +81,24 @@ export class Card extends Component<ICard> {
 		this.container.dataset.id = value;
 	}
 	
-	set index(value: number) {
-		this.setText('.basket__item-index', String(value));
-	}
-
 	set title(value: string) {
-		this.setText('.card__title', value);
+		this.setText(this._title, value);
 	}
 
 	set description(value: string) {
-		this.setText('.card__description', value);
+		this.setText(this._description, value);
 	}
 
 	set price(value: number | null) {
         this.setText(
-            '.card__price',
+            this._price,
             value ? `${value} ${settings.labels.currency}` : settings.labels.priceless
         );
     }
 
 	set category(value: Category | undefined) {
 		if (this._category && value) {
-			this.setText('.card__category', value);
+			this.setText(this._category, value);
 			const classKey = categoryClasses[value];
 			if (classKey) {
 				this._category.className = `${settings.classes.card.category} ${settings.classes.card.categoryPrefix}${classKey}`;
@@ -106,7 +106,11 @@ export class Card extends Component<ICard> {
 		}
 	}
 
+	set index(value: number) {
+		this.setText(this._index, String(value));
+	}
+
 	set image(value: string | undefined) {
-		this.setImage('.card__image', value || '', this._title.textContent || '');
+		this.setImage(this._image, value || '', this._title.textContent || '');
 	}
 }
