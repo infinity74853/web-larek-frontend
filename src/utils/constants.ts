@@ -77,7 +77,7 @@ export const settings = {
 		currency: 'синапсов',
 		priceless: 'Бесценно',
 		cartList: 'Корзина',
-		deleteFromCart: ''
+		deleteFromCart: '',
 	},
 };
 

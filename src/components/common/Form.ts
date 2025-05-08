@@ -28,5 +28,5 @@ export abstract class FormComponent<T> extends Component<T> {
 		this.setText(this._errorContainer, errors.join('; '));
 		this._errorContainer.style.display = errors.length ? 'block' : 'none';
 		this.setDisabled(this._submitButton, errors.length > 0);
-	}	
+	}
 }

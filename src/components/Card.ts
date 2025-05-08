@@ -11,21 +11,24 @@ export class Card extends Component<ICard> {
 	protected _title: HTMLElement;
 	protected _image: HTMLImageElement;
 	protected _price: HTMLElement;
-	protected _description?: HTMLElement; 
+	protected _description?: HTMLElement;
 	protected _category?: HTMLElement;
 	protected _button?: HTMLButtonElement;
 	protected _index: HTMLElement;
-		
+
 	constructor(container: HTMLElement, actions?: ICardActions) {
 		super(container);
 
 		this._title = ensureElement<HTMLElement>('.card__title', container);
 		this._price = ensureElement<HTMLElement>('.card__price', container);
-		
+
 		this._category = container.querySelector<HTMLElement>('.card__category');
-		this._button = container.querySelector<HTMLButtonElement>('.card__button, .basket__item-delete');
+		this._button = container.querySelector<HTMLButtonElement>(
+			'.card__button, .basket__item-delete'
+		);
 		this._image = container.querySelector<HTMLImageElement>('.card__image');
-		this._description = container.querySelector<HTMLElement>('.card__description');
+		this._description =
+			container.querySelector<HTMLElement>('.card__description');
 		this._index = container.querySelector<HTMLElement>('.basket__item-index');
 
 		if (actions?.onClick) {
@@ -47,40 +50,41 @@ export class Card extends Component<ICard> {
 	}
 
 	private updateButtonState(inCart: boolean, price: number | null) {
-        if (!this._button) return;
-    
-        const isBasketButton = this._button.classList.contains('basket__item-delete');
-        
-        if (isBasketButton) {
-            this.setText(this._button, settings.labels.deleteFromCart);
-            this.setDisabled(this._button, false);
-        } else {
-            const disabled = inCart || price === null;
-            this.setDisabled(this._button, disabled);
-            this.setText(this._button, 
-                inCart ? settings.labels.inCart :
-                price === null ? settings.labels.notForSale :
-                settings.labels.addToCart
-            );
-        }
-    }
+		if (!this._button) return;
+
+		const isBasketButton = this._button.classList.contains(
+			'basket__item-delete'
+		);
+
+		if (isBasketButton) {
+			this.setText(this._button, settings.labels.deleteFromCart);
+			this.setDisabled(this._button, false);
+		} else {
+			const disabled = inCart || price === null;
+			this.setDisabled(this._button, disabled);
+			this.setText(
+				this._button,
+				inCart
+					? settings.labels.inCart
+					: price === null
+					? settings.labels.notForSale
+					: settings.labels.addToCart
+			);
+		}
+	}
 
 	render(data: ICard & { inCart?: boolean; price?: number | null }) {
-        super.render(data);
-        
-        // Обновление кнопки
-        this.updateButtonState(
-            data.inCart || false,
-            data.price ?? null
-        );
+		super.render(data);
 
-        return this.container;
-    }
+		this.updateButtonState(data.inCart || false, data.price ?? null);
+
+		return this.container;
+	}
 
 	set id(value: string) {
 		this.container.dataset.id = value;
 	}
-	
+
 	set title(value: string) {
 		this.setText(this._title, value);
 	}
@@ -90,11 +94,11 @@ export class Card extends Component<ICard> {
 	}
 
 	set price(value: number | null) {
-        this.setText(
-            this._price,
-            value ? `${value} ${settings.labels.currency}` : settings.labels.priceless
-        );
-    }
+		this.setText(
+			this._price,
+			value ? `${value} ${settings.labels.currency}` : settings.labels.priceless
+		);
+	}
 
 	set category(value: Category | undefined) {
 		if (this._category && value) {

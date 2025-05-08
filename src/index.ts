@@ -27,9 +27,9 @@ const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 
 // Инициализация компонентов
 const events = new EventEmitter();
-const modal = new Modal(ensureElement<HTMLElement>('#modal-container'),	events);
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const appData = new AppData(events);
-const page = new Page(events, cardCatalogTemplate, ensureElement('#app-container'));
+const page = new Page(events, ensureElement('#app-container'));
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 events.emit('cart:changed');
@@ -39,86 +39,103 @@ const contactsComponent = new Contacts(cloneTemplate(contactsTemplate), events);
 
 // Подписки на события
 events.on('catalog:changed', () => {
-    page.renderCatalog(appData.products, appData.getCartIds());
+	const cards = appData.products.map((product) => {
+		const card = new Card(cloneTemplate(cardCatalogTemplate), {
+			onClick: () => events.emit('product:add', product),
+			onPreview: () => events.emit('preview:open', product),
+		});
+
+		card.render({
+			...product,
+			inCart: appData.isInCart(product.id),
+		});
+
+		return card.getContainer();
+	});
+
+	page.renderCatalog(cards);
 });
 
 // Обработчик изменений поля email
 events.on('contacts:email:change', (event: { value: string }) => {
-    appData.updateOrderField('email', event.value);
+	appData.updateOrderField('email', event.value);
 });
 
 // Обработчик изменений поля телефон
 events.on('contacts:phone:change', (event: { value: string }) => {
-    appData.updateOrderField('phone', event.value);
+	appData.updateOrderField('phone', event.value);
 });
 
 events.on('cart:changed', () => {
-    // Обновляем счетчик
-    page.updateBasketCounter(appData.cart.length);
-    
-    // Обновляем корзину
-    const basketItems = appData.cart.map((item, index) => {
-        const card = new Card(cloneTemplate(cardBasketTemplate), {
-            onClick: () => events.emit('basket:remove', { productId: item.productId })
-        });
-        
-        card.render({
-            id: item.productId,
-            title: item.title,
-            price: item.price,
-            index: index + 1
-        });
-        
-        return card.getContainer();
-    });
-    
-    basket.updateBasket(basketItems, appData.getCartTotal());
-    
-    // Обновляем каталог
-    events.emit('catalog:changed');
+	// Обновляем счетчик
+	page.updateBasketCounter(appData.cart.length);
+
+	// Обновляем корзину
+	const basketItems = appData.cart.map((item, index) => {
+		const card = new Card(cloneTemplate(cardBasketTemplate), {
+			onClick: () =>
+				events.emit('basket:remove', { productId: item.productId }),
+		});
+
+		card.render({
+			id: item.productId,
+			title: item.title,
+			price: item.price,
+			index: index + 1,
+		});
+
+		return card.getContainer();
+	});
+
+	basket.updateBasket(basketItems, appData.getCartTotal());
+
+	// Обновляем каталог
+	events.emit('catalog:changed');
 });
 
 events.on('product:add', (product: Product) => {
 	appData.addToCart(product);
-	events.emit('card:update', { 
-        id: product.id, 
-        inCart: true 
-    });
+	events.emit('card:update', {
+		id: product.id,
+		inCart: true,
+	});
 });
 
 events.on('card:update', (data: { id: string; inCart: boolean }) => {
-    const buttons = ensureAllElements<HTMLButtonElement>(`[data-id="${data.id}"] .card__button`);
-    
-    buttons.forEach(button => {
-        button.disabled = data.inCart;
-        button.textContent = data.inCart
-            ? settings.labels.inCart
-            : settings.labels.addToCart;
-    });
+	const buttons = ensureAllElements<HTMLButtonElement>(
+		`[data-id="${data.id}"] .card__button`
+	);
+
+	buttons.forEach((button) => {
+		button.disabled = data.inCart;
+		button.textContent = data.inCart
+			? settings.labels.inCart
+			: settings.labels.addToCart;
+	});
 });
 
 events.on('preview:open', (product: Product) => {
-    const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
-        onClick: () => events.emit('product:add', product),
-    });
+	const previewCard = new Card(cloneTemplate(cardPreviewTemplate), {
+		onClick: () => events.emit('product:add', product),
+	});
 
-    previewCard.render({
-        ...product,
-        inCart: appData.isInCart(product.id)
-    });
+	previewCard.render({
+		...product,
+		inCart: appData.isInCart(product.id),
+	});
 
-    modal.open(previewCard.getContainer());
+	modal.open(previewCard.getContainer());
 });
 
 // Клик по корзине
 events.on('basket:open', () => {
 	events.emit('cart:changed');
 	modal.open(basket.render());
-  });
+});
 
 // Обработчик удаления из корзины
 events.on('basket:remove', (event: { productId: string }) => {
-    appData.removeFromCart(event.productId);
+	appData.removeFromCart(event.productId);
 });
 
 // Оформление заказа
@@ -152,18 +169,21 @@ events.on('contacts:open', () => {
 
 // Обработчик отправки контактов
 events.on('contacts:submit', (data: IContactsForm) => {
-    appData.updateOrderField('email', data.email);
-    appData.updateOrderField('phone', data.phone);
+	appData.updateOrderField('email', data.email);
+	appData.updateOrderField('phone', data.phone);
 
-    // Создаем экземпляр Success
-    const successComponent = new Success(cloneTemplate(successTemplate), {
-        onClick: () => events.emit('modal:close'),
-    });
-    
-    successComponent.total = appData.order?.total || 0;
-    modal.open(successComponent.getContainer());
-    
-    appData.clearCart();
+	const successComponent = new Success(cloneTemplate(successTemplate), {
+		onClick: () => events.emit('modal:close'),
+	});
+
+	successComponent.total = appData.order.total;
+	modal.open(successComponent.getContainer());
+
+	// Очистка данных
+	appData.clearCart();
+	appData.clearOrder(); // Используем новый метод
+	contactsComponent.reset();
+	orderComponent.reset();
 });
 
 events.on('order:complete', () => {
@@ -194,4 +214,6 @@ events.on('modal:close', () => {
 	document.body.classList.remove('no-scroll');
 });
 
-api.getProducts().then((products) => {	appData.setCatalog(products);});
+api.getProducts().then((products) => {
+	appData.setCatalog(products);
+});

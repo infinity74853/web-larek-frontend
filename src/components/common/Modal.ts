@@ -3,17 +3,14 @@ import { IEvents } from '../base/Events';
 import { ensureElement } from '../../utils/utils';
 
 export class Modal extends Component<HTMLElement> {
-    setProductData() {
-        throw new Error('Method not implemented.');
-    }
+	setProductData() {
+		throw new Error('Method not implemented.');
+	}
 	protected _closeButton: HTMLButtonElement;
 	protected _content: HTMLElement;
 	private _handleKeyDown: (event: KeyboardEvent) => void;
 
-	constructor(
-		container: HTMLElement,
-		protected events: IEvents,		
-	) {
+	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 		this._closeButton = ensureElement<HTMLButtonElement>(
 			'.modal__close',
@@ -52,8 +49,8 @@ export class Modal extends Component<HTMLElement> {
 		document.removeEventListener('keydown', this._handleKeyDown);
 		this.events.emit('modal:close');
 	}
-	
+
 	private isActive(): boolean {
-        return this.container.classList.contains('modal_active');
-    }
+		return this.container.classList.contains('modal_active');
+	}
 }

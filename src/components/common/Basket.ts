@@ -9,10 +9,7 @@ export class Basket extends Component<HTMLElement> {
 	protected _total: HTMLElement;
 	protected _button: HTMLButtonElement;
 
-	constructor(
-		container: HTMLElement,
-		protected events: IEvents,		
-	) {
+	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 		this._title = ensureElement<HTMLElement>('.basket__title', this.container);
 		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
@@ -21,27 +18,27 @@ export class Basket extends Component<HTMLElement> {
 			'.basket__button',
 			this.container
 		);
-		this.initialize();			
+		this.initialize();
 	}
 
 	private initialize() {
 		this._button.addEventListener('click', () => {
-		  this.events.emit('order:start');
+			this.events.emit('order:start');
 		});
-	}	
+	}
 
 	public updateBasket(items: HTMLElement[], total: number) {
-        this._list.innerHTML = '';
-        items.forEach(item => this._list.appendChild(item));
-        this.setTotal(total);
-        this.toggleButton(items.length === 0);
-    }	
+		this._list.innerHTML = '';
+		items.forEach((item) => this._list.appendChild(item));
+		this.setTotal(total);
+		this.toggleButton(items.length === 0);
+	}
 
-    private setTotal(value: number) {
-        this.setText(this._total, `${value} ${settings.labels.currency}`);
-    }
-    
-    private toggleButton(disabled: boolean) {
-        this.setDisabled(this._button, disabled);
-    }
+	private setTotal(value: number) {
+		this.setText(this._total, `${value} ${settings.labels.currency}`);
+	}
+
+	private toggleButton(disabled: boolean) {
+		this.setDisabled(this._button, disabled);
+	}
 }

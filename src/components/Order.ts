@@ -101,4 +101,10 @@ export class Order extends FormComponent<HTMLFormElement> {
 	protected validateAddress(value: string): boolean {
 		return value.length >= settings.validation.minAddressLength;
 	}
+
+	reset() {
+		this.resetPayment();
+		this._addressInput.value = '';
+		this.showErrors([]);
+	}
 }

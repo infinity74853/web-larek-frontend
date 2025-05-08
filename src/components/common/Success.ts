@@ -30,6 +30,6 @@ export class Success extends Component<{ total: number }> {
 	}
 
 	getContainer(): HTMLElement {
-        return this.container;
-    }
+		return this.container;
+	}
 }

@@ -17,6 +17,11 @@ export class LarekAPI extends Api {
 	}
 
 	async createOrder(order: IOrderData): Promise<IOrderResult> {
-		return this.post('/order', order) as Promise<IOrderResult>;
+		const mockResponse: IOrderResult = {
+			id: `mock-${Date.now()}`,
+			total: order.total,
+		};
+
+		return Promise.resolve(mockResponse);
 	}
 }

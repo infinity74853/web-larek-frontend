@@ -23,19 +23,19 @@ export interface IOrderData extends IOrderForm {
 }
 export interface ICartItem {
 	productId: string;
-	
+
 	price: number;
 	title: string;
 }
 export interface ICard {
-    id?: string;
-    title?: string;
-    price?: number;
-    category?: string;
-    image?: string;
-    description?: string;
-    index?: number;
-    inCart?: boolean;
+	id?: string;
+	title?: string;
+	price?: number;
+	category?: string;
+	image?: string;
+	description?: string;
+	index?: number;
+	inCart?: boolean;
 }
 
 export type Category =
@@ -50,9 +50,9 @@ export interface IOrderResult {
 	total: number;
 }
 export interface FormErrors {
-    payment?: string;
-    address?: string;
-    email?: string;
-    phone?: string;
-    [key: string]: string;
+	payment?: string;
+	address?: string;
+	email?: string;
+	phone?: string;
+	[key: string]: string;
 }
