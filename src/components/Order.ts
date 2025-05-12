@@ -3,6 +3,7 @@ import { FormComponent } from './common/Form';
 import { IEvents } from './base/Events';
 import { AppData } from './AppData';
 import { settings } from '../utils/constants';
+import { PaymentMethod } from '../types';
 
 export class Order extends FormComponent<HTMLFormElement> {
 	protected _paymentCard: HTMLButtonElement;
@@ -52,7 +53,7 @@ export class Order extends FormComponent<HTMLFormElement> {
 		this.container.addEventListener('submit', (e) => this.handleSubmit(e));
 	}
 
-	private handlePaymentChange(method: 'card' | 'cash'): void {
+	private handlePaymentChange(method: PaymentMethod): void {
 		this.resetPayment();
 		const button = method === 'card' ? this._paymentCard : this._paymentCash;
 		button.classList.add(settings.classes.button.active);
@@ -77,7 +78,7 @@ export class Order extends FormComponent<HTMLFormElement> {
 		);
 	}
 
-	private get selectedPayment(): string | null {
+	private get selectedPayment(): PaymentMethod | null {
 		return this._paymentCard.classList.contains(settings.classes.button.active)
 			? 'card'
 			: this._paymentCash.classList.contains(settings.classes.button.active)
@@ -87,14 +88,18 @@ export class Order extends FormComponent<HTMLFormElement> {
 
 	private handleSubmit(e: Event): void {
 		e.preventDefault();
-		if (this.selectedPayment) {
-			this.appData.updateOrderField('payment', this.selectedPayment);
-			this.appData.updateOrderField('address', this._addressInput.value.trim());
-			this.events.emit('order:submit', {
-				payment: this.selectedPayment,
-				address: this._addressInput.value.trim(),
-			});
+		if (!this.isValid) {
+			this.updateForm();
+			return;
 		}
+
+		this.appData.updateOrderField('payment', this.selectedPayment);
+		this.appData.updateOrderField('address', this._addressInput.value.trim());
+
+		this.events.emit('order:submit', {
+			payment: this.selectedPayment,
+			address: this._addressInput.value.trim(),
+		});
 	}
 
 	// Валидация адреса доставки

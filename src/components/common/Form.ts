@@ -5,6 +5,7 @@ import { ensureElement } from '../../utils/utils';
 export abstract class FormComponent<T> extends Component<T> {
 	protected _submitButton?: HTMLButtonElement;
 	protected _errorContainer?: HTMLElement;
+	private _isLoading = false;
 
 	constructor(
 		protected container: HTMLFormElement,
@@ -21,6 +22,11 @@ export abstract class FormComponent<T> extends Component<T> {
 			'.form__errors',
 			container
 		);
+	}
+
+	set isLoading(value: boolean) {
+		this._isLoading = value;
+		this._submitButton.disabled = value;
 	}
 
 	// Mетод для отображения ошибок

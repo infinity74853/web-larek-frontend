@@ -124,13 +124,15 @@ events.on('preview:open', (product: Product) => {
 		inCart: appData.isInCart(product.id),
 	});
 
-	modal.open(previewCard.getContainer());
+	modal.setContent(previewCard.getContainer());
+	modal.open();
 });
 
 // Клик по корзине
 events.on('basket:open', () => {
 	events.emit('cart:changed');
-	modal.open(basket.render());
+	modal.setContent(basket.render());
+	modal.open();
 });
 
 // Обработчик удаления из корзины
@@ -141,15 +143,10 @@ events.on('basket:remove', (event: { productId: string }) => {
 // Оформление заказа
 events.on('order:start', () => {
 	appData.initOrder();
-	orderComponent.resetPayment();
-	orderComponent.address = '';
+	orderComponent.reset();
 
-	const modalContent = ensureElement<HTMLElement>(
-		'#modal-container .modal__content'
-	);
-	modalContent.innerHTML = '';
-	modalContent.appendChild(orderComponent.getContainer());
-	events.emit('modal:open');
+	modal.setContent(orderComponent.getContainer());
+	modal.open();
 });
 
 events.on('order:submit', (data: IOrderForm) => {
@@ -159,59 +156,45 @@ events.on('order:submit', (data: IOrderForm) => {
 });
 
 events.on('contacts:open', () => {
-	const modalContent = ensureElement<HTMLElement>(
-		'#modal-container .modal__content'
-	);
-	modalContent.innerHTML = '';
-	modalContent.appendChild(contactsComponent.getContainer());
-	events.emit('modal:open');
+	modal.setContent(contactsComponent.getContainer());
+	modal.open();
 });
 
 // Обработчик отправки контактов
-events.on('contacts:submit', (data: IContactsForm) => {
-	appData.updateOrderField('email', data.email);
-	appData.updateOrderField('phone', data.phone);
+events.on('contacts:submit', async (data: IContactsForm) => {
+	try {
+		contactsComponent.isLoading = true;
+		appData.updateOrderField('email', data.email);
+		appData.updateOrderField('phone', data.phone);
 
-	const successComponent = new Success(cloneTemplate(successTemplate), {
-		onClick: () => events.emit('modal:close'),
-	});
+		const result = await appData.sendOrder(api);
+		if (!result?.id) {
+			throw new Error('Заказ не был создан');
+		}
 
-	successComponent.total = appData.order.total;
-	modal.open(successComponent.getContainer());
+		modal.close();
 
-	// Очистка данных
-	appData.clearCart();
-	appData.clearOrder(); // Используем новый метод
-	contactsComponent.reset();
-	orderComponent.reset();
+		const successComponent = new Success(cloneTemplate(successTemplate), {
+			onClick: () => modal.close(),
+		});
+		successComponent.render({ total: result.total });
+
+		modal.setContent(successComponent.getContainer());
+		modal.open();
+
+		appData.clearOrder();
+		appData.clearCart();
+		orderComponent.reset();
+		contactsComponent.reset();
+	} catch (error) {
+		console.error('Ошибка:', error);
+	} finally {
+		contactsComponent.isLoading = false;
+	}
 });
 
-events.on('order:complete', () => {
-	const successTemplate = ensureElement<HTMLTemplateElement>('#success');
-	const successComponent = new Success(cloneTemplate(successTemplate), {
-		onClick: () => events.emit('modal:close'),
-	});
-
-	successComponent.total = appData.order?.total || 0;
-
-	const modalContent = ensureElement<HTMLElement>(
-		'#modal-container .modal__content'
-	);
-	modalContent.innerHTML = '';
-	modalContent.appendChild(successComponent.getContainer());
-	events.emit('modal:open');
-
-	appData.clearCart();
-});
-
-// Обработчик закрытия модалки
 events.on('modal:close', () => {
 	events.emit('cart:changed');
-	const modalContainer = document.getElementById('modal-container');
-	if (modalContainer) {
-		modalContainer.classList.remove('modal_active');
-	}
-	document.body.classList.remove('no-scroll');
 });
 
 api.getProducts().then((products) => {

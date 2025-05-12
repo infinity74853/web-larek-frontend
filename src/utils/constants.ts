@@ -51,6 +51,7 @@ export const settings = {
 			payment: 'Выберите способ оплаты',
 			addressRequired: 'Укажите адрес',
 			addressInvalid: 'Укажите настоящий адрес',
+			notInitialized: 'Order not initialized',
 		},
 
 		contacts: {

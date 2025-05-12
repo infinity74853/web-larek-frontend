@@ -1,6 +1,13 @@
-import { Product, ICartItem, IOrderData, FormErrors } from '../types';
+import {
+	Product,
+	ICartItem,
+	IOrderData,
+	FormErrors,
+	IOrderResult,
+} from '../types';
 import { IEvents } from './base/Events';
 import { settings } from '../utils/constants';
+import { LarekAPI } from './LarekAPI';
 
 export class AppData {
 	private _products: Product[] = [];
@@ -25,6 +32,22 @@ export class AppData {
 		this._order[field] = value;
 		this.validateForm();
 		this.events.emit('order:change', this._order);
+	}
+
+	async sendOrder(api: LarekAPI): Promise<IOrderResult> {
+		if (!this._order)
+			throw new Error(settings.errorMessages.order.notInitialized);
+
+		const orderData: IOrderData = {
+			...this._order,
+			items: this._cart.map((item) => item.productId),
+			total: this.getCartTotal(),
+		};
+
+		return api.createOrder(orderData).then((result: IOrderResult) => {
+			this.clearCart();
+			return result;
+		});
 	}
 
 	// Инициализация заказа

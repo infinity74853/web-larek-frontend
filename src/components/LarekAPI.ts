@@ -17,11 +17,24 @@ export class LarekAPI extends Api {
 	}
 
 	async createOrder(order: IOrderData): Promise<IOrderResult> {
-		const mockResponse: IOrderResult = {
-			id: `mock-${Date.now()}`,
-			total: order.total,
-		};
+		const response = await fetch(`${this.baseUrl}/order`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(order),
+		});
 
-		return Promise.resolve(mockResponse);
+		// Проверка HTTP статуса
+		if (!response.ok) {
+			throw new Error(`Ошибка сервера: ${response.status}`);
+		}
+
+		const data = await response.json();
+
+		// Строгая проверка структуры ответа
+		if (!data?.id || typeof data.total !== 'number') {
+			throw new Error('Некорректные данные заказа');
+		}
+
+		return data;
 	}
 }

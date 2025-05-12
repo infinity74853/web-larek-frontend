@@ -314,7 +314,9 @@
 					</label>
 				</div>
 				<div class="modal__actions">
-					<button type="submit" disabled class="button">Оплатить</button>
+					<button type="submit" disabled [disabled]="isLoading" class="button">
+						Оплатить
+					</button>
 					<div class="contacts-errors form__errors"></div>
 				</div>
 			</form>

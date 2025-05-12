@@ -5,7 +5,7 @@ export class Page {
 	private basketCounter: HTMLElement;
 
 	constructor(events: IEvents, private appContainer: HTMLElement) {
-		this.basketCounter = ensureElement('.header__basket-counter');
+		this.basketCounter = ensureElement<HTMLElement>('.header__basket-counter');
 
 		// Инициализация обработчика корзины
 		const basketButton = ensureElement('.header__basket');

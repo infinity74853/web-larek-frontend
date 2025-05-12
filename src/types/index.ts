@@ -49,6 +49,8 @@ export interface IOrderResult {
 	id: string;
 	total: number;
 }
+
+export type PaymentMethod = 'card' | 'cash';
 export interface FormErrors {
 	payment?: string;
 	address?: string;
