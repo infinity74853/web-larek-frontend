@@ -1,5 +1,6 @@
 import { Api, ApiListResponse } from './base/Api';
 import { Product, IOrderData, IOrderResult } from '../types';
+import { settings } from '../utils/constants';
 
 export class LarekAPI extends Api {
 	constructor(baseUrl: string, protected cdnUrl: string) {
@@ -25,14 +26,16 @@ export class LarekAPI extends Api {
 
 		// Проверка HTTP статуса
 		if (!response.ok) {
-			throw new Error(`Ошибка сервера: ${response.status}`);
+			throw new Error(
+				`${settings.errorMessages.order.serverError} ${response.status}`
+			);
 		}
 
 		const data = await response.json();
 
 		// Строгая проверка структуры ответа
 		if (!data?.id || typeof data.total !== 'number') {
-			throw new Error('Некорректные данные заказа');
+			throw new Error(settings.errorMessages.order.invalidOrderData);
 		}
 
 		return data;

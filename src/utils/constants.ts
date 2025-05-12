@@ -52,6 +52,10 @@ export const settings = {
 			addressRequired: 'Укажите адрес',
 			addressInvalid: 'Укажите настоящий адрес',
 			notInitialized: 'Order not initialized',
+			invalidOrderData: 'Некорректные данные заказа',
+			serverError: 'Ошибка сервера',
+			orderNotCreated: 'Заказ не был создан',
+			commonError: 'Ошибка:',
 		},
 
 		contacts: {

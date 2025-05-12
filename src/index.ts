@@ -67,10 +67,8 @@ events.on('contacts:phone:change', (event: { value: string }) => {
 });
 
 events.on('cart:changed', () => {
-	// Обновляем счетчик
 	page.updateBasketCounter(appData.cart.length);
 
-	// Обновляем корзину
 	const basketItems = appData.cart.map((item, index) => {
 		const card = new Card(cloneTemplate(cardBasketTemplate), {
 			onClick: () =>
@@ -89,7 +87,6 @@ events.on('cart:changed', () => {
 
 	basket.updateBasket(basketItems, appData.getCartTotal());
 
-	// Обновляем каталог
 	events.emit('catalog:changed');
 });
 
@@ -169,7 +166,7 @@ events.on('contacts:submit', async (data: IContactsForm) => {
 
 		const result = await appData.sendOrder(api);
 		if (!result?.id) {
-			throw new Error('Заказ не был создан');
+			throw new Error(settings.errorMessages.order.orderNotCreated);
 		}
 
 		modal.close();
@@ -187,7 +184,7 @@ events.on('contacts:submit', async (data: IContactsForm) => {
 		orderComponent.reset();
 		contactsComponent.reset();
 	} catch (error) {
-		console.error('Ошибка:', error);
+		console.error(settings.errorMessages.order.commonError, error);
 	} finally {
 		contactsComponent.isLoading = false;
 	}
